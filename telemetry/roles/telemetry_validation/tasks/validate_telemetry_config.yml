@@ -44,7 +44,7 @@
         file: "{{ telemetry_config_file }}"
         name: telemetry_config
       register: include_telemetry_config
-      no_log: false
+      no_log: true
   rescue:
     - name: Failed to include telemetry_config.yml
       ansible.builtin.fail:

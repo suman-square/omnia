@@ -24,9 +24,9 @@
     container_manager: "containerd"
     dashboard_enabled: true
     helm_enabled: true
-    kube_network_plugin: "{{ hostvars['localhost']['k8s_cni'] }}"
-    kube_service_addresses: "{{ hostvars['localhost']['k8s_service_addresses'] }}"
-    kube_pods_subnet: "{{ hostvars['localhost']['k8s_pod_network_cidr'] }}"
+    kube_network_plugin: "{{ hostvars['localhost']['omnia_config']['k8s_cni'] }}"
+    kube_service_addresses: "{{ hostvars['localhost']['omnia_config']['k8s_service_addresses'] }}"
+    kube_pods_subnet: "{{ hostvars['localhost']['omnia_config']['k8s_pod_network_cidr'] }}"
     kube_proxy_strict_arp: true
     kube_proxy_mode: 'iptables'
     kubelet_custom_flags: "{% if hostvars['localhost']['topology_manager_policy'] != 'none' %}
@@ -40,7 +40,7 @@
       address_pools:
         primary:
           ip_range:
-            - "{{ hostvars['localhost']['pod_external_ip_range'] }}"
+            - "{{ hostvars['localhost']['omnia_config']['pod_external_ip_range'] }}"
           auto_assign: true
       layer2:
         - primary
@@ -75,7 +75,7 @@
     helm_download_url: "{{ hostvars['localhost']['offline_tarball_path'] }}/{{ hostvars['localhost']['helm_package'] }}.tar.gz"
     http_proxy: "{{ hostvars['localhost']['http_proxy'] }}"
     https_proxy: "{{ hostvars['localhost']['https_proxy'] }}"
-    no_proxy: "localhost,127.0.0.1,{{ hostvars['localhost']['admin_nic_ip'] }},{{ hostvars['localhost']['k8s_service_addresses'] }},{{ hostvars['localhost']['k8s_pod_network_cidr'] }},{{ hostvars['localhost']['k8s_cni'] }},{{ hostvars['localhost']['oim_hostname'] }},{{ hostvars['localhost']['domain_name'] }}"   # noqa: yaml[line-length]
+    no_proxy: "localhost,127.0.0.1,{{ hostvars['localhost']['admin_nic_ip'] }},{{ hostvars['localhost']['omnia_config']['k8s_service_addresses'] }},{{ hostvars['localhost']['omnia_config']['k8s_pod_network_cidr'] }},{{ hostvars['localhost']['omnia_config']['k8s_cni'] }},{{ hostvars['localhost']['oim_hostname'] }},{{ hostvars['localhost']['domain_name'] }}"   # noqa: yaml[line-length]
     additional_no_proxy: "{{ hostvars['localhost']['user_no_proxy'] if hostvars['localhost']['no_proxy_input_status'] else '' }}"   # noqa: yaml[line-length]
 
 - name: Initiate add node
@@ -89,9 +89,9 @@
     container_manager: "containerd"
     dashboard_enabled: true
     helm_enabled: true
-    kube_network_plugin: "{{ hostvars['localhost']['k8s_cni'] }}"
-    kube_service_addresses: "{{ hostvars['localhost']['k8s_service_addresses'] }}"
-    kube_pods_subnet: "{{ hostvars['localhost']['k8s_pod_network_cidr'] }}"
+    kube_network_plugin: "{{ hostvars['localhost']['omnia_config']['k8s_cni'] }}"
+    kube_service_addresses: "{{ hostvars['localhost']['omnia_config']['k8s_service_addresses'] }}"
+    kube_pods_subnet: "{{ hostvars['localhost']['omnia_config']['k8s_pod_network_cidr'] }}"
     kubelet_custom_flags: "{% if hostvars['localhost']['topology_manager_policy'] != 'none' %}
       --topology-manager-policy={{ hostvars['localhost']['topology_manager_policy'] }}
       --topology-manager-scope={{ hostvars['localhost']['topology_manager_scope'] }}
@@ -104,7 +104,7 @@
       address_pools:
         primary:
           ip_range:
-            - "{{ hostvars['localhost']['pod_external_ip_range'] }}"
+            - "{{ hostvars['localhost']['omnia_config']['pod_external_ip_range'] }}"
           auto_assign: true
       layer2:
         - primary
@@ -139,5 +139,5 @@
     helm_download_url: "{{ hostvars['localhost']['offline_tarball_path'] }}/{{ hostvars['localhost']['helm_package'] }}.tar.gz"
     http_proxy: "{{ hostvars['localhost']['http_proxy'] }}"
     https_proxy: "{{ hostvars['localhost']['https_proxy'] }}"
-    no_proxy: "localhost,127.0.0.1,{{ hostvars['localhost']['admin_nic_ip'] }},{{ hostvars['localhost']['k8s_service_addresses'] }},{{ hostvars['localhost']['k8s_pod_network_cidr'] }},{{ hostvars['localhost']['oim_hostname'] }},{{ hostvars['localhost']['domain_name'] }}"   # noqa: yaml[line-length]
+    no_proxy: "localhost,127.0.0.1,{{ hostvars['localhost']['admin_nic_ip'] }},{{ hostvars['localhost']['omnia_config']['k8s_service_addresses'] }},{{ hostvars['localhost']['omnia_config']['k8s_pod_network_cidr'] }},{{ hostvars['localhost']['oim_hostname'] }},{{ hostvars['localhost']['domain_name'] }}"   # noqa: yaml[line-length]
     additional_no_proxy: "{{ hostvars['localhost']['user_no_proxy'] if hostvars['localhost']['no_proxy_input_status'] else '' }}"   # noqa: yaml[line-length]

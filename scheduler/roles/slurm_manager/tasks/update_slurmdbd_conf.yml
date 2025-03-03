@@ -23,7 +23,7 @@
 - name: Grant permissions for slurm db
   ansible.builtin.command: >-
     mysql -u root -e "GRANT ALL ON slurm_acct_db.* TO '{{ db_user }}'@'{{
-    db_host }}' identified by '{{ hostvars['127.0.0.1']['db_password'] }}'with
+    db_host }}' identified by '{{ hostvars['127.0.0.1']['mariadb_password'] }}'with
     grant option;"
   tags: install
   changed_when: true

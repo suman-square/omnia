@@ -15,7 +15,7 @@
 
 - name: Check if omnia_vault_key exists
   ansible.builtin.stat:
-    path: "{{ role_path }}/../../../input/{{ config_vaultname }}"
+    path: "{{ role_path }}/../../../input/{{ omnia_config_vaultname }}"
   register: vault_key_result
 
 - name: Create ansible vault key if it does not exist
@@ -25,7 +25,7 @@
 
 - name: Save vault key
   ansible.builtin.lineinfile:
-    path: "{{ role_path }}/../../../input/{{ config_vaultname }}"
+    path: "{{ role_path }}/../../../input/{{ omnia_config_vaultname }}"
     line: "{{ vault_key }}"
     mode: "{{ vault_key_permission }}"
     owner: root
@@ -33,22 +33,23 @@
   when: not vault_key_result.stat.exists
 
 - name: Check if omnia config file is encrypted
-  ansible.builtin.command: cat {{ role_path }}/../../../input/{{ config_filename }}
+  ansible.builtin.command: cat {{ role_path }}/../../../input/{{ omnia_config_filename }}
   changed_when: false
   register: config_content
   no_log: true
 
 - name: Decrpyt omnia_config.yml
   ansible.builtin.command: >-
-    ansible-vault decrypt {{ role_path }}/../../../input/{{ config_filename }}
-    --vault-password-file {{ role_path }}/../../../input/{{ config_vaultname }}
+    ansible-vault decrypt {{ role_path }}/../../../input/{{ omnia_config_filename }}
+    --vault-password-file {{ role_path }}/../../../input/{{ omnia_config_vaultname }}
   when: "'$ANSIBLE_VAULT;' in config_content.stdout"
   changed_when: true
 
 - name: Include variable file omnia_config.yml
   block:
     - name: Include variable file omnia_config.yml
-      ansible.builtin.include_vars: "{{ role_path }}/../../../input/{{ config_filename }}"
+      ansible.builtin.include_vars: "{{ role_path }}/../../../input/{{ omnia_config_filename }}"
+      name: omnia_config
       register: include_omnia_config
       no_log: true
   rescue:
@@ -61,32 +62,32 @@
     msg: "{{ input_config_failure_msg }}"
   register: input_config_check
   when:
-    - ansible_config_file_path | default("", true) | length < 1
+    - omnia_config.ansible_config_file_path | default("", true) | length < 1
 
 - name: Validate input parameters are not empty
   ansible.builtin.fail:
     msg: " {{ slurm_installation_type_empty_failure_msg }}"
   register: input_config_check
   when:
-    - slurm_installation_type | default("", true) | length < 1
+    - omnia_config.slurm_installation_type | default("", true) | length < 1
 
 - name: Validate input parameters are mentioned properly for slurm installation type
   ansible.builtin.fail:
     msg: " {{ slurm_installation_type_wrong_failure_msg }}"
   register: input_config_check
   when:
-    - slurm_installation_type | default("", true) not in ["nfs_share", "configless"]
+    - omnia_config.slurm_installation_type | default("", true) not in ["nfs_share", "configless"]
 
 - name: Assert mariadb_password
   ansible.builtin.assert:
     that:
-      - mariadb_password | default("", true) | length > 1
-      - mariadb_password | length > min_length | int - 1
-      - mariadb_password | length < max_length | int + 1
-      - '"-" not in mariadb_password '
-      - '"\\" not in mariadb_password '
-      - '"\"" not in mariadb_password '
-      - " \"'\" not in mariadb_password "
+      - omnia_config.mariadb_password | default("", true) | length > 1
+      - omnia_config.mariadb_password | length > min_length | int - 1
+      - omnia_config.mariadb_password | length < max_length | int + 1
+      - '"-" not in omnia_config.mariadb_password '
+      - '"\\" not in omnia_config.mariadb_password '
+      - '"\"" not in omnia_config.mariadb_password '
+      - " \"'\" not in omnia_config.mariadb_password "
     success_msg: "{{ success_msg_mariadb_password }}"
     fail_msg: "{{ fail_msg_mariadb_password }}"
   when: slurm_support
@@ -94,7 +95,7 @@
 - name: Verify the value of restart_slurm_services
   ansible.builtin.assert:
     that:
-      - restart_slurm_services == true or restart_slurm_services == false
+      - omnia_config.restart_slurm_services == true or omnia_config.restart_slurm_services == false
     success_msg: "{{ restart_services_success_msg }}"
     fail_msg: "{{ restart_services_failure_msg }}"
   when: slurm_support
@@ -117,48 +118,48 @@
     - name: Assert kubernetes cni
       ansible.builtin.assert:
         that:
-          - k8s_cni | default("", true) | length > 1
-          - "('calico' in k8s_cni) or ('flannel' in k8s_cni)"
+          - omnia_config.k8s_cni | default("", true) | length > 1
+          - "('calico' in omnia_config.k8s_cni) or ('flannel' in omnia_config.k8s_cni)"
         success_msg: "{{ success_msg_k8s_cni }}"
         fail_msg: "{{ fail_msg_k8s_cni }}"
 
     - name: Assert pod external IP range
       ansible.builtin.assert:
         that:
-          - pod_external_ip_range | default("", true) | length > 9
-          - ("'/' in pod_external_ip_range") or ("'-' in pod_external_ip_range")
+          - omnia_config.pod_external_ip_range | default("", true) | length > 9
+          - ("'/' in omnia_config.pod_external_ip_range") or ("'-' in omnia_config.pod_external_ip_range")
         success_msg: "{{ success_msg_pod_external_ip_range }}"
         fail_msg: "{{ fail_msg_pod_external_ip_range }}"
 
     - name: Assert kubernetes service addresses
       ansible.builtin.assert:
         that:
-          - k8s_service_addresses | default("", true) | length > 9
-          - '"/" in k8s_service_addresses'
+          - omnia_config.k8s_service_addresses | default("", true) | length > 9
+          - '"/" in omnia_config.k8s_service_addresses'
         success_msg: "{{ success_msg_k8s_service_addresses }}"
         fail_msg: "{{ fail_msg_k8s_service_addresses }}"
 
     - name: Assert kubernetes pod network CIDR
       ansible.builtin.assert:
         that:
-          - k8s_pod_network_cidr | default("", true) | length > 9
-          - '"/" in k8s_pod_network_cidr'
+          - omnia_config.k8s_pod_network_cidr | default("", true) | length > 9
+          - '"/" in omnia_config.k8s_pod_network_cidr'
         success_msg: "{{ success_msg_k8s_pod_network_cidr }}"
         fail_msg: "{{ fail_msg_k8s_pod_network_cidr }}"
 
     - name: Assert kubernetes topology manager policy
       ansible.builtin.assert:
         that:
-          - topology_manager_policy | default("", true) | length > 1
-          - "topology_manager_policy in supported_topology_manager_policy"
+          - omnia_config.topology_manager_policy | default("", true) | length > 1
+          - "omnia_config.topology_manager_policy in supported_topology_manager_policy"
         success_msg: "{{ success_msg_k8s_toplogy_manager_policy }}"
         fail_msg: "{{ fail_msg_k8s_toplogy_manager_policy }}"
 
     - name: Assert kubernetes topology manager scope
       ansible.builtin.assert:
         that:
-          - topology_manager_scope | default("", true) | length > 1
-          - "topology_manager_scope in supported_topology_manager_scope"
+          - omnia_config.topology_manager_scope | default("", true) | length > 1
+          - "omnia_config.topology_manager_scope in supported_topology_manager_scope"
         success_msg: "{{ success_msg_k8s_toplogy_manager_scope }}"
         fail_msg: "{{ fail_msg_k8s_toplogy_manager_scope }}"
 
@@ -194,16 +195,16 @@
     - name: Validate that csi_powerscale_driver_secret_file_path contains a valid path
       ansible.builtin.assert:
         that:
-          - csi_powerscale_driver_secret_file_path is defined
-          - csi_powerscale_driver_secret_file_path | length > 0
+          - omnia_config.csi_powerscale_driver_secret_file_path is defined
+          - omnia_config.csi_powerscale_driver_secret_file_path | length > 0
         success_msg: "{{ csi_driver_secret_file_path_success_msg }}"
         fail_msg: "{{ csi_driver_secret_file_path_fail_msg }}"
 
     - name: Validate that csi_powerscale_driver_values_file_path contains a valid path
       ansible.builtin.assert:
         that:
-          - csi_powerscale_driver_values_file_path is defined
-          - csi_powerscale_driver_values_file_path | length > 0
+          - omnia_config.csi_powerscale_driver_values_file_path is defined
+          - omnia_config.csi_powerscale_driver_values_file_path | length > 0
         success_msg: "{{ csi_driver_values_file_path_success_msg }}"
         fail_msg: "{{ csi_driver_values_file_path_fail_msg }}"
 
@@ -214,16 +215,20 @@
       ansible.builtin.set_fact:
         csi_driver_powerscale_precheck_pass: true
 
-- name: Save input variables from file
+- name: Set facts for non common variables with telemetry config
   ansible.builtin.set_fact:
-    db_password: "{{ mariadb_password }}"
-    k8s_cni: "{{ k8s_cni }}"
-    ansible_conf_file_path: "{{ ansible_config_file_path }}"
-    slurm_installation_type: "{{ slurm_installation_type }}"
-  no_log: true
+    ansible_config_file_path: "{{ omnia_config.ansible_config_file_path }}"
+    mariadb_password: "{{ omnia_config.mariadb_password }}"
+    slurm_installation_type: "{{ omnia_config.slurm_installation_type }}"
+    restart_slurm_services: "{{ omnia_config.restart_slurm_services }}"
+    topology_manager_policy: "{{ omnia_config.topology_manager_policy }}"
+    topology_manager_scope: "{{ omnia_config.topology_manager_scope }}"
+    run_intel_gaudi_tests: "{{ omnia_config.run_intel_gaudi_tests | default(false) }}"
+    csi_powerscale_driver_secret_file_path: "{{ omnia_config.csi_powerscale_driver_secret_file_path }}"
+    csi_powerscale_driver_values_file_path: "{{ omnia_config.csi_powerscale_driver_values_file_path }}"
 
 - name: Encrypt input config file
   ansible.builtin.command: >-
-    ansible-vault encrypt {{ role_path }}/../../../input/{{ config_filename }}
-    --vault-password-file {{ role_path }}/../../../input/{{ config_vaultname }}
+    ansible-vault encrypt {{ role_path }}/../../../input/{{ omnia_config_filename }}
+    --vault-password-file {{ role_path }}/../../../input/{{ omnia_config_vaultname }}
   changed_when: false

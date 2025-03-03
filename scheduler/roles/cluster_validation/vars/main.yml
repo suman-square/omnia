@@ -44,8 +44,8 @@ success_msg_nvidia_gpu_operator_version: "Success. nvidia gpu operator version i
 fail_msg_nvidia_gpu_operator_version: "Failed. nvidia gpu operator version is not provided in software_config.json. Please include nvidia gpu operator version in input/software_config.json and rerun the playbook." # noqa: yaml[line-length]
 fail_msg_k8s_support_false: "Failed. k8s is not present in software_config.json, please add k8s in input/software_config.json and rerun the playbook."  # noqa: yaml[line-length]
 # Usage: fetch_omnia_inputs.yml
-config_filename: "omnia_config.yml"
-config_vaultname: .omnia_vault_key
+omnia_config_filename: "omnia_config.yml"
+omnia_config_vaultname: .omnia_vault_key
 vault_key_permission: "0644"
 min_length: 8
 max_length: 30

@@ -41,6 +41,6 @@ PluginDir={{ plugin_slurm_dir }}
 StorageType=accounting_storage/mysql
 #StorageHost=
 #StoragePort=
-StoragePass={{ hostvars['127.0.0.1']['db_password'] }}
+StoragePass={{ hostvars['127.0.0.1']['mariadb_password'] }}
 StorageUser={{ slurm_user }}
 #StorageLoc=

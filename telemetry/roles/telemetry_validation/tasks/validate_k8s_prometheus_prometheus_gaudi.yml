@@ -44,6 +44,6 @@
 - name: Assert prometheus_scrape_interval
   ansible.builtin.assert:
     that:
-      - prometheus_scrape_interval is integer
-      - prometheus_scrape_interval > 0
+      - telemetry_config.prometheus_scrape_interval is integer
+      - telemetry_config.prometheus_scrape_interval > 0
     fail_msg: "{{ prometheus_scrape_interval_fail_msg }}"

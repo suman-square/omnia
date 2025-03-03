@@ -16,8 +16,8 @@
 - name: Assert omnia telemetry collection interval
   ansible.builtin.assert:
     that:
-      - omnia_telemetry_collection_interval is integer
-      - omnia_telemetry_collection_interval >= min_interval and omnia_telemetry_collection_interval <= max_interval
+      - telemetry_config.omnia_telemetry_collection_interval is integer
+      - telemetry_config.omnia_telemetry_collection_interval >= min_interval and telemetry_config.omnia_telemetry_collection_interval <= max_interval
     fail_msg: "{{ omnia_telemetry_collection_interval_fail_msg }}"
 
 - name: Set collect regular metrics value
@@ -59,17 +59,17 @@
 - name: Assert fuzzy offset
   ansible.builtin.assert:
     that:
-      - fuzzy_offset is integer
-      - fuzzy_offset >= 60
-      - fuzzy_offset <= omnia_telemetry_collection_interval
+      - telemetry_config.fuzzy_offset is integer
+      - telemetry_config.fuzzy_offset >= 60
+      - telemetry_config.fuzzy_offset <= telemetry_config.omnia_telemetry_collection_interval
     fail_msg: "{{ fuzzy_offset_fail_msg }}"
 
 - name: Assert metric collection timeout
   ansible.builtin.assert:
     that:
-      - metric_collection_timeout is integer
-      - metric_collection_timeout > 0
-      - metric_collection_timeout < omnia_telemetry_collection_interval
+      - telemetry_config.metric_collection_timeout is integer
+      - telemetry_config.metric_collection_timeout > 0
+      - telemetry_config.metric_collection_timeout < telemetry_config.omnia_telemetry_collection_interval
     fail_msg: "{{ metric_collection_timeout_fail_msg }}"
 
 # Validate k8s groups in inventory

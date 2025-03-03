@@ -48,9 +48,10 @@
 - name: Include variable file omnia_config.yml
   block:
     - name: Include variable file omnia_config.yml
-      ansible.builtin.include_vars: "{{ role_path }}/../../../input/{{ omnia_config_filename }}"
-      name: omnia_config
-      register: include_omnia_config
+      ansible.builtin.include_vars:
+        file: "{{ role_path }}/../../../input/{{ omnia_config_filename }}"
+        name: omnia_config
+      register: include_omnia_configc
       no_log: true
   rescue:
     - name: Failed to include omnia_config.yml

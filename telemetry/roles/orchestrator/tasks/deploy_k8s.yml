@@ -60,7 +60,7 @@
   environment:
     HTTP_PROXY: "{{ proxy[0].http_proxy | default('', true) }}"
     HTTPS_PROXY: "{{ proxy[0].https_proxy | default('', true) }}"
-    NO_PROXY: "localhost,{{ oim_hostname }},*.{{ oim_domain_name }},{{ oim_ip_addresses | join(',') }},{{ hostvars['localhost']['pod_external_ip_range'] }},{{ hostvars['localhost']['k8s_service_addresses'] }},{{ hostvars['localhost']['k8s_pod_network_cidr'] }}" # noqa: yaml[line-length]
+    NO_PROXY: "localhost,{{ oim_hostname }},*.{{ oim_domain_name }},{{ oim_ip_addresses | join(',') }},{{ hostvars['localhost']['telemetry_config']['pod_external_ip_range'] }},{{ hostvars['localhost']['telemetry_config']['k8s_service_addresses'] }},{{ hostvars['localhost']['telemetry_config']['k8s_pod_network_cidr'] }}" # noqa: yaml[line-length]
   register: k8s_install
   changed_when: k8s_install.changed
   failed_when: false

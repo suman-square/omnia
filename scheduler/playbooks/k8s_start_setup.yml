@@ -39,7 +39,7 @@
       address_pools:
         primary:
           ip_range:
-            - "{{ hostvars['localhost']['omnia_config']['pod_external_ip_range'] }}"`
+            - "{{ hostvars['localhost']['omnia_config']['pod_external_ip_range'] }}"
           auto_assign: true
       layer2:
         - primary

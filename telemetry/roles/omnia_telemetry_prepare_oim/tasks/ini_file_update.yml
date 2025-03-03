@@ -26,9 +26,9 @@
     regexp: "{{ item.name }}=(.*)$"
     line: "{{ item.name }}={{ item.value | lower }}"
   with_items:
-    - { name: omnia_telemetry_collection_interval, value: "{{ omnia_telemetry_collection_interval }}" }
+    - { name: omnia_telemetry_collection_interval, value: "{{ telemetry_config.omnia_telemetry_collection_interval }}" }
     - { name: collect_regular_metrics, value: "{{ collect_regular_metrics }}" }
     - { name: collect_health_check_metrics, value: "{{ collect_health_check_metrics }}" }
     - { name: collect_gpu_metrics, value: "{{ collect_gpu_metrics }}" }
-    - { name: fuzzy_offset, value: "{{ fuzzy_offset }}" }
-    - { name: metric_collection_timeout, value: "{{ metric_collection_timeout }}" }
+    - { name: fuzzy_offset, value: "{{ telemetry_config.fuzzy_offset }}" }
+    - { name: metric_collection_timeout, value: "{{ telemetry_config.metric_collection_timeout }}" }

@@ -40,9 +40,11 @@
 - name: Include variable file telemetry_config.yml
   block:
     - name: Include variable file telemetry_config.yml
-      ansible.builtin.include_vars: "{{ telemetry_config_file }}"
+      ansible.builtin.include_vars:
+        file: "{{ telemetry_config_file }}"
+        name: telemetry_config
       register: include_telemetry_config
-      no_log: true
+      no_log: false
   rescue:
     - name: Failed to include telemetry_config.yml
       ansible.builtin.fail:
@@ -50,11 +52,24 @@
 
 - name: Set support values
   ansible.builtin.set_fact:
-    idrac_telemetry_support: "{{ idrac_telemetry_support | lower }}"
-    omnia_telemetry_support: "{{ omnia_telemetry_support | lower }}"
-    visualization_support: "{{ visualization_support | lower }}"
-    k8s_prometheus_support: "{{ k8s_prometheus_support | lower }}"
-    prometheus_gaudi_support: "{{ prometheus_gaudi_support | lower }}"
+    idrac_telemetry_support: "{{ telemetry_config.idrac_telemetry_support | lower }}"
+    omnia_telemetry_support: "{{ telemetry_config.omnia_telemetry_support | lower }}"
+    visualization_support: "{{ telemetry_config.visualization_support | lower }}"
+    k8s_prometheus_support: "{{ telemetry_config.k8s_prometheus_support | lower }}"
+    prometheus_gaudi_support: "{{ telemetry_config.prometheus_gaudi_support | lower }}"
+    timescaledb_user: "{{ telemetry_config.timescaledb_user | default('') }}"
+    timescaledb_password: "{{ telemetry_config.timescaledb_password | default('') }}"
+    idrac_username: "{{ telemetry_config.idrac_username | default('') }}"
+    idrac_password: "{{ telemetry_config.idrac_password | default('') }}"
+    mysqldb_user: "{{ telemetry_config.mysqldb_user | default('') }}"
+    mysqldb_password: "{{ telemetry_config.mysqldb_password | default('') }}"
+    mysqldb_root_password: "{{ telemetry_config.mysqldb_root_password | default('') }}"
+    collect_regular_metrics: "{{ telemetry_config.collect_regular_metrics | default(true) }}"
+    collect_health_check_metrics: "{{ telemetry_config.collect_health_check_metrics | default(true) }}"
+    collect_gpu_metrics: "{{ telemetry_config.collect_gpu_metrics | default(true) }}"
+    grafana_username: "{{ telemetry_config.grafana_username | default('') }}"
+    grafana_password: "{{ telemetry_config.grafana_password | default('') }}"
+    mount_location: "{{ telemetry_config.mount_location | default('') }}"
 
 - name: Assert idrac telemetry support
   ansible.builtin.assert:
@@ -166,29 +181,29 @@
 - name: Assert k8s_cni
   ansible.builtin.assert:
     that:
-      - k8s_cni == "calico" or k8s_cni == "flannel"
+      - telemetry_config.k8s_cni == "calico" or telemetry_config.k8s_cni == "flannel"
     fail_msg: "{{ invalid_k8s_cni }}"
 
 - name: Assert pod external IP range
   ansible.builtin.assert:
     that:
-      - pod_external_ip_range | default("", true) | length > 9
-      - ("'/' in pod_external_ip_range") or ("'-' in pod_external_ip_range")
+      - telemetry_config.pod_external_ip_range | default("", true) | length > 9
+      - ("'/' in telemetry_config.pod_external_ip_range") or ("'-' in telemetry_config.pod_external_ip_range")
     fail_msg: "{{ invalid_pod_external_ip_range }}"
   when: idrac_telemetry_support or omnia_telemetry_support or visualization_support
 
 - name: Assert kubernetes service addresses
   ansible.builtin.assert:
     that:
-      - k8s_service_addresses | default("", true) | length > 9
-      - '"/" in k8s_service_addresses'
+      - telemetry_config.k8s_service_addresses | default("", true) | length > 9
+      - '"/" in telemetry_config.k8s_service_addresses'
     fail_msg: "{{ invalid_k8s_service_addresses }}"
 
 - name: Assert kubernetes pod network CIDR
   ansible.builtin.assert:
     that:
-      - k8s_pod_network_cidr | default("", true) | length > 9
-      - '"/" in k8s_pod_network_cidr'
+      - telemetry_config.k8s_pod_network_cidr | default("", true) | length > 9
+      - '"/" in telemetry_config.k8s_pod_network_cidr'
     fail_msg: "{{ invalid_k8s_pod_network_cidr }}"
 
 # Encrypt telemetry_config.yml

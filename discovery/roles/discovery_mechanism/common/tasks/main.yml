@@ -35,3 +35,7 @@
 
     - name: Remove old SSH key
       ansible.builtin.include_tasks: remove_old_ssh_key.yml
+
+- name: Update postgres conf for service nodes
+  ansible.builtin.include_tasks: service_node_postgres_setting.yml
+  when: service_role_required | default(false)

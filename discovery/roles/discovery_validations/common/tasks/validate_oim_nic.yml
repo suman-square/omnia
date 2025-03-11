@@ -13,14 +13,6 @@
 #  limitations under the License.
 ---
 
-- name: Initialize bmc details
-  ansible.builtin.set_fact:
-    bmc_nic_ip: ""
-    bmc_nic: ""
-    bmc_dynamic_status: false
-    bmc_static_status: false
-    bmc_discover_range_status: false
-
 - name: Fetch the network interfaces in UP state in the system
   ansible.builtin.shell: |
     set -o pipefail

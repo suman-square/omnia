@@ -18,20 +18,7 @@ from ansible.module_utils.basic import AnsibleModule
 import json
 import sys
 
-module_args = dict(
-    db_path=dict(type="str", required=True),
-    node_details=dict(type="list", elements="dict", required=True),
-    domain_name=dict(type="str", required=True),
-    discovery_mechanism=dict(type="str", required=True)
-)
-
-module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
-
-db_path = module.params["db_path"]
-sys.path.insert(0, db_path)
-import omniadb_connection
-
-def nodeinfo_db_update(node_details, domain_name, discovery_mechanism):
+def nodeinfo_db_update(node_details, domain_name, discovery_mechanism, db_path):
     """
     Updates the database with node information from the provided JSON node_details.
 
@@ -39,6 +26,9 @@ def nodeinfo_db_update(node_details, domain_name, discovery_mechanism):
     service tag exists in the database, and either inserts a new record or logs that the
     node already exists.
     """
+    sys.path.insert(0, db_path)
+    import omniadb_connection
+
     existing_nodes = []
     new_nodes = []
 
@@ -65,8 +55,10 @@ def nodeinfo_db_update(node_details, domain_name, discovery_mechanism):
 
         if not exists:
             # Insert new node record
-            omniadb_connection.insert_node_info(temp_service_tag, node, fqdn_hostname, temp_mac, temp_admin_ip, temp_bmc_ip,
-                group_name, role, location_id, architecture, discovery_mechanism, None, None, None, None)
+            omniadb_connection.insert_node_info(
+                temp_service_tag, node, fqdn_hostname, temp_mac, temp_admin_ip, temp_bmc_ip,
+                group_name, role, location_id, architecture, discovery_mechanism, None, None, None, None
+            )
             new_nodes.append({'node': node, 'service_tag': temp_service_tag, 'mac': temp_mac})
         else:
             existing_nodes.append({'node': node, 'service_tag': temp_service_tag, 'mac': temp_mac})
@@ -74,13 +66,26 @@ def nodeinfo_db_update(node_details, domain_name, discovery_mechanism):
     conn.close()
     return new_nodes, existing_nodes
 
+def main():
+    module_args = dict(
+        db_path=dict(type="str", required=True),
+        node_details=dict(type="list", elements="dict", required=True),
+        domain_name=dict(type="str", required=True),
+        discovery_mechanism=dict(type="str", required=True)
+    )
 
-node_details = module.params["node_details"]
-domain_name = module.params["domain_name"]
-discovery_mechanism = module.params['discovery_mechanism']
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
-try:
-    new_nodes, existing_nodes = nodeinfo_db_update(node_details, domain_name, discovery_mechanism)
-    module.exit_json(changed=True, msg="Database updated successfully", existing_nodes=existing_nodes, new_nodes=new_nodes)
-except Exception as e:
-    module.fail_json(msg=str(e))
+    db_path = module.params["db_path"]
+    node_details = module.params["node_details"]
+    domain_name = module.params["domain_name"]
+    discovery_mechanism = module.params["discovery_mechanism"]
+
+    try:
+        new_nodes, existing_nodes = nodeinfo_db_update(node_details, domain_name, discovery_mechanism, db_path)
+        module.exit_json(changed=True, msg="Database updated successfully", existing_nodes=existing_nodes, new_nodes=new_nodes)
+    except Exception as e:
+        module.fail_json(msg=str(e))
+
+if __name__ == "__main__":
+    main()

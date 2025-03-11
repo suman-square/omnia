@@ -1,7 +1,7 @@
 ---
     Networks:
     - admin_network:
-        nic_name: "eno1"
+        oim_nic_name: "eno1"
         netmask_bits: "16"
         primary_oim_admin_ip: "10.5.255.254"
         static_range: "10.5.0.1-10.5.0.200"
@@ -13,12 +13,11 @@
         MTU: "1500"
 
     - bmc_network:
-        nic_name: ""
+        oim_nic_name: ""
         netmask_bits: ""
-        static_range: ""
         dynamic_range: ""
+        dynamic_conversion_static_range: ""
         reassignment_to_static: true
-        discover_ranges: ""
         network_gateway: ""
         MTU: "1500"
 

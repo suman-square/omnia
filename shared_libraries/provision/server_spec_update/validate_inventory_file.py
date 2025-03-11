@@ -37,6 +37,7 @@ def validate_inventory(category_list, hostvars):
 
     # Remove localhost from inventory
     hostvars.pop('localhost','none')
+    hostvars.pop('omnia_provision','none')
 
     # Validate hosts in inventory file
     for host, host_data in hostvars.items():

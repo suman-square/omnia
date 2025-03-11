@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Groups": {
+      "type": "object",
+      "patternProperties": {
+        "^grp([1-9][0-9]?|0)$": {
+          "type": "object",
+          "properties": {
+            "location_id": {
+              "type": "string",
+              "description": "Scalable unit and rack number range is 0-99. Format: su-<n>.rack-<n>",
+              "pattern": "^(SU-\\d{1,2}\\.RACK-\\d{1,2})$"
+            },
+            "resource_mgr_id": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9,]*$",
+              "description": "List of service tag of active head node(s). Set the value only for group of nodes belonging to kube_node and slurm_node roles, and empty for other roles."
+            },
+            "parent": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9,]*$",
+              "description": "List of service tag of associated active service node(s). This field will be empty for group of nodes which is associated with ‘login’, ‘compiler’, ‘service’, ‘kube_control_plane’,’slurm_control_plane’. If ‘service’ role is not defined, then value will be empty for worker and default role."
+            },
+            "bmc_details": {
+              "type": "object",
+              "properties": {
+                "static_range": {
+                  "type": "string",
+                  "description": "BMC IP static range in the format 10.5.0.1-10.5.0.200. This field mandatory in case of BMC discovery of subset of nodes"
+                }
+              }
+            },
+            "switch_details": {
+              "type": "object",
+              "properties": {
+               "ip": {
+                 "type": "string",
+                 "description": "IP address of the switch"
+                },
+                "ports": {
+                  "type": "string",
+                  "description": "Ports on the switch. Format can be '1-48', '49:3', '50', or a combination.",
+                  "pattern": "^((\\d+(-\\d+)?|\\d+:\\d+)(,(\\d+(-\\d+)?|\\d+:\\d+))*)?$"
+                }
+              },
+              "required": [
+                "ip",
+                "ports"
+              ]
+            },
+            "architecture": {
+                "type": "string",
+                "description": "Architecture of the nodes - x86 or ARM",
+                "enum": ["x86", "ARM"],
+                "required": ["architecture"]
+            }
+          },
+          "required": [
+            "location_id",
+            "architecture"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the role, can be any of the following Omnia defined roles.",
+            "enum": [
+              "default",
+              "service",
+              "kube_control_plane",
+              "kube_node",
+              "etcd",
+              "slurm_control_node",
+              "slurm_node",
+              "slurm_dbd",
+              "login",
+              "auth_server",
+              "compiler"
+            ]
+          },
+          "groups": {
+            "type": "array",
+            "description": "List of groups defined by the user",
+            "items": {
+              "type": "string",
+              "pattern": "^grp\\d{1,2}$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "name",
+          "groups"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "Groups",
+    "Roles"
+  ]
+}

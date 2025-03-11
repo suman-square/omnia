@@ -13,15 +13,10 @@
 # limitations under the License.
 ---
 
-- name: Warning - BMC dynamic and discover ranges should not overlap.
-  ansible.builtin.pause:
-    seconds: "{{ warning_wait_time_bmc }}"
-    prompt: "{{ bmc_ranges_overlap_msg }}"
-
 - name: Validate input ranges for all ranges
   ansible.builtin.command: >-
     {{ python_version }} {{ validation_range_file }}
-    {{ bmc_static_start_range }} {{ bmc_static_end_range }} {{ bmc_dynamic_start_range }} {{ bmc_dynamic_end_range }}
+    {{ bmc_conversion_static_start_range }} {{ bmc_conversion_static_end_range }} {{ bmc_dynamic_start_range }} {{ bmc_dynamic_end_range }}
   register: range_validation_status
   changed_when: true
 
@@ -41,13 +36,3 @@
   ansible.builtin.fail:
     msg: "{{ bmc_static_range_mismatch_msg }}"
   when: range_mismatch_key in range_validation_status.stdout
-
-- name: Set value if bmc discover range is empty
-  ansible.builtin.set_fact:
-    discover_ranges: 0.0.0.0
-  when: not bmc_discover_range_status
-
-- name: Set value if bmc discover range is empty
-  ansible.builtin.set_fact:
-    discover_ranges: "{{ network_data.bmc_network.discover_ranges }}"
-  when: bmc_discover_range_status

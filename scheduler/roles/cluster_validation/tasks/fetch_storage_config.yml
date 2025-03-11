@@ -16,7 +16,7 @@
 - name: Include variable file storage_config.yml
   block:
     - name: Include variable file storage_config.yml
-      ansible.builtin.include_vars: "{{ role_path }}/../../../input/{{ storage_config_filename }}"
+      ansible.builtin.include_vars: "{{ input_project_dir }}/{{ storage_config_filename }}"
       register: include_storage_config
       no_log: true
   rescue:
@@ -54,7 +54,7 @@
 
     - name: Change k8s_nfs_server_ip to admin_nic_ip when it is "localhost"
       ansible.builtin.set_fact:
-        k8s_nfs_server_ip: "{{ admin_nic_ip }}"
+        k8s_nfs_server_ip: "{{ hostvars['localhost']['admin_nic_ip'] }}"
       when: k8s_nfs_server_ip == "localhost"
 
     - name: Get server_share_path where k8s_share is true

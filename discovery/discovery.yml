@@ -13,6 +13,22 @@
 # limitations under the License.
 ---
 
+- name: Set_fact for fetch omnia config credentials
+  hosts: localhost
+  tags: first_layer
+  connection: local
+  tasks:
+    - name: Set dynamic run tags including 'provision'
+      when: not config_file_status | default(false) | bool
+      ansible.builtin.set_fact:
+        omnia_run_tags: "{{ (ansible_run_tags | default([]) + ['provision']) | unique }}"
+        cacheable: true
+
+- name: Invoke get_config_credentials.yml
+  when: not config_file_status | default(false) | bool
+  ansible.builtin.import_playbook: ../utils/credential_utility/get_config_credentials.yml
+  tags: first_layer
+
 - name: Include input project directory
   when: not project_dir_status | default(false) | bool
   ansible.builtin.import_playbook: ../utils/include_input_dir.yml
@@ -26,16 +42,6 @@
     omnia_provision_group: true
     omnia_provision_validation: true
 
-- name: Decrypyt provision_credentials_config.yml
-  hosts: localhost
-  connection: local
-  tags: first_layer
-  tasks:
-    - name: Decrypt provision_credentials_config.yml
-      ansible.builtin.include_role:
-        name: discovery_validations/common                    # noqa: role-name[path]
-        tasks_from: decrypt_provision_credentials_config.yml
-
 - name: Validate discovery parameters
   hosts: omnia_provision
   connection: ssh
@@ -44,16 +50,6 @@
     - name: Validate discovery parameters
       ansible.builtin.include_role:
         name: discovery_validations/common                    # noqa: role-name[path]
-
-- name: Encrypyt provision_credentials_config.yml
-  hosts: localhost
-  connection: local
-  tags: first_layer
-  tasks:
-    - name: Encrypyt provision_credentials_config.yml
-      ansible.builtin.include_role:
-        name: discovery_validations/common                    # noqa: role-name[path]
-        tasks_from: encrypt_provision_credentials_config.yml
 
 - name: Validate discovery parameters
   hosts: omnia_provision

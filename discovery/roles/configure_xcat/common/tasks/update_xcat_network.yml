@@ -13,9 +13,15 @@
 # limitations under the License.
 ---
 
-- name: Configure bmc_network in networks table with static and dynamic ranges
+- name: Configure bmc_network in networks table with dynamic ranges
   ansible.builtin.shell: >
     {{ xcat_path }}/chdef -t network -o bmc_network net={{ bmc_nic_subnet }} mask={{ bmc_nic_netmask }} mgtifname={{ bmc_nic }}
     gateway={{ bmc_nic_ip }} dhcpserver={{ bmc_nic_ip }} dynamicrange="{{ bmc_dynamic_start_range }}-{{ bmc_dynamic_end_range }}"
-    staticrange="{{ bmc_static_start_range }}-{{ bmc_static_end_range }}" mtu={{ network_data.bmc_network.MTU }}
+    mtu={{ network_data.bmc_network.MTU }}
   changed_when: true
+
+- name: Update static ranges for bmc network
+  ansible.builtin.shell: >
+    {{ xcat_path }}/chdef -t network -o bmc_network staticrange="{{ bmc_conversion_static_start_range }}-{{ bmc_conversion_static_end_range }}"
+  changed_when: true
+  when: reassignment_status

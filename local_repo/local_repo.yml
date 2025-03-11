@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
+
+- name: Set_fact for fetch omnia config credentials
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Set dynamic run tags including 'local_repo'
+      ansible.builtin.set_fact:
+        omnia_run_tags: "{{ (ansible_run_tags | default([]) + ['local_repo']) | unique }}"
+        cacheable: true
+
+- name: Invoke get_config_credentials.yml
+  ansible.builtin.import_playbook: ../utils/credential_utility/get_config_credentials.yml
 - name: Include input project directory
   when: not project_dir_status | default(false) | bool
   ansible.builtin.import_playbook: ../utils/include_input_dir.yml
@@ -22,7 +34,7 @@
   vars:
     oim_group: true
 
-- name: Read network_spec vars
+- name: Read network_spec and omnia_credentials vars
   hosts: localhost
   connection: local
   gather_facts: true

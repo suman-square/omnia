@@ -44,6 +44,10 @@
     switch_status: "{{ composable_roles_output.switch_status }}"
     groups_roles_info: "{{ composable_roles_output.groups_roles_info }}"
 
+- name: Set fact for service role required
+  ansible.builtin.set_fact:
+    service_role_required: "{{ 'true' if 'service' in roles_groups_data else 'false' }}"
+
 - name: Display filtered group wise details
   ansible.builtin.debug:
     msg: "{{ groups_roles_info }}"

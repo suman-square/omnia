@@ -26,11 +26,13 @@
       containers.podman.podman_container:
         name: "{{ provision_container_name }}"
         state: stopped
+      failed_when: false  
 
     - name: Remove Provision container
       containers.podman.podman_container:
         name: "{{ provision_container_name }}"
         state: absent
+        force_delete: true
 
     - name: Remove Provision directory
       ansible.builtin.file:

@@ -17,10 +17,8 @@
   ansible.builtin.include_tasks: validate_bmc_mechanism.yml
 
 - name: Validate mtms discovery parameters when discovery mechanism is mtms
-  when: discovery_mech_bmc
+  when: discovery_mech_dynamic_bmc
   block:
-    - name: Include prerequisites
-      ansible.builtin.include_tasks: prerequisites.yml
-
     - name: Validate the BMC input ranges
       ansible.builtin.include_tasks: validate_bmc_ranges.yml
+      when: reassignment_status

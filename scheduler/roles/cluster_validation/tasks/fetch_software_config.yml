@@ -1,4 +1,4 @@
-#  Copyright 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+#  Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -127,10 +127,10 @@
 
     - name: Conditional logic for kubeadm, kubectl, and kubelet packages # noqa: no-jinja-when
       ansible.builtin.set_fact:
-        kubeadm_package: "kubeadm-{{ hostvars['localhost']['k8s_version'] }}"
-        kubectl_package: "kubectl-{{ hostvars['localhost']['k8s_version'] }}"
-        kubelet_package: "kubelet-{{ hostvars['localhost']['k8s_version'] }}"
-      when: k8s_version != '{{ omnia161_k8s_version }}'
+        kubeadm_package: "kubeadm-v{{ hostvars['localhost']['k8s_version'] }}"
+        kubectl_package: "kubectl-v{{ hostvars['localhost']['k8s_version'] }}"
+        kubelet_package: "kubelet-v{{ hostvars['localhost']['k8s_version'] }}"
+     # when: k8s_version != '{{ omnia161_k8s_version }}'
 
   rescue:
     - name: Unable to fetch k8s version

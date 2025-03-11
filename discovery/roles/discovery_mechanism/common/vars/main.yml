@@ -34,3 +34,6 @@ xcat_sbin_path: /opt/xcat/sbin
 empty_discover_node_msg: |
   "Failed. No nodes were discovered. Please ensure the input related to discovery details is correct inside provision_config.yml and network_spec.yml
    and check if IPMI is enabled on the nodes if using BMC discovery mechanism."
+
+# Usage: service_node_postgres_setting.yml
+pg_hba_conf_path: /var/lib/pgsql/data/pg_hba.conf

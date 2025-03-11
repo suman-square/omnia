@@ -13,9 +13,9 @@
 # limitations under the License.
 ---
 
-- name: Run parallel tasks and handle results
+- name: Execute tasks and process results
   block:
-    - name: Run parallel tasks
+    - name: Execute tasks and process results
       parallel_tasks:
         tasks: "{{ item.value }}"
         log_dir: "{{ base_path }}/{{ item.key }}/logs"
@@ -33,40 +33,42 @@
       ansible.builtin.debug:
         msg: "{{ task_results }}"
 
-    - name: Process each task result
+    - name: Set fact for overall status
       ansible.builtin.set_fact:
          overall_status_dict: "{{ overall_status_dict | default({}) | combine({ item.key: task_results.overall_status }) }}"
 
+
+
   rescue:
-    - name: Log the failure with directory details
+    - name: Log the failure
       ansible.builtin.debug:
         msg:
           - "Parallel tasks encountered an error. Check the logs for details:"
           - "Log directory: {{ base_path }}/{{ item.key }}/logs"
           - "Log file: {{ base_path }}/{{ item.key }}_task_results.log"
   always:
-    - name: Display the pretty table of task results
+    - name: Display the output table
       ansible.builtin.debug:
         msg: "{{ task_results.table_output.split('\n') if task_results.table_output is defined else 'No table output available.' }}"
 
-    - name: Handle overall status (Success, Partial, Failure)
+    - name: Handle overall status
       block:
-        - name: Confirm Success
+        - name: Confirm all tasks Success
           ansible.builtin.debug:
             msg: "All tasks completed successfully."
           when: task_results.overall_status == "SUCCESS"
 
-        - name: Fail for Partial Status
+        - name: Fail if Partial Success
           ansible.builtin.debug:
             msg: "Some tasks partially failed. Please review the task details above for more information."
           when: task_results.overall_status == "PARTIAL"
 
-        - name: Fail for Failure Status
+        - name: Fail if Failure to download package
           ansible.builtin.debug:
             msg: "Some tasks failed. Please review the task details above for more information."
           when: task_results.overall_status == "FAILURE"
 
-        - name: Fail for Timeout Status
+        - name: Fail if Timeout during download
           ansible.builtin.debug:
             msg: "Some tasks failed due to timeout. Please review the task details above for more information."
           when: task_results.overall_status == "TIMEOUT"

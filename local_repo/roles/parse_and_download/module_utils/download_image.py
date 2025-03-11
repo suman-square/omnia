@@ -15,7 +15,7 @@
 import re
 from jinja2 import Template
 from ansible.module_utils.standard_logger import setup_standard_logger
-from ansible.module_utils.parse_and_download import execute_command
+from ansible.module_utils.parse_and_download import execute_command,write_status_to_file
  
 pulp_container_commands = {
     "create_container_repo": "pulp container repository create --name %s",
@@ -46,7 +46,7 @@ def create_container_repository(repo_name,logger):
             command = pulp_container_commands["create_container_repo"] % (repo_name)
             result = execute_command(command,logger)
             logger.info(f"Repository created successfully: {repo_name}")
-            return True
+            return result
         else:
             logger.info(f"Repository {repo_name} already exists.")
             return True
@@ -77,7 +77,7 @@ def create_container_remote(remote_name, remote_url, package, policy_type, tag, 
             command = pulp_container_commands["create_container_remote"] % (remote_name, remote_url, package, policy_type, tag)
             result = execute_command(command,logger)
             logger.info(f"Remote created successfully: {remote_name}")
-            return True
+            return result
         else:
             logger.info(f"Remote {remote_name} already exists.")
             command = pulp_container_commands["update_container_remote"] % (remote_name, remote_url, package, policy_type, tag)
@@ -109,7 +109,7 @@ def create_container_remote_digest(remote_name, remote_url, package, policy_type
             command = pulp_container_commands["create_container_remote_for_digest"] % (remote_name, remote_url, package, policy_type)
             result = execute_command(command,logger)
             logger.info(f"Remote created successfully: {remote_name}")
-            return True
+            return result
         else:
             logger.info(f"Remote {remote_name} already exists.")
             command = pulp_container_commands["update_remote_for_digest"] % (remote_name, remote_url, package, policy_type)
@@ -134,7 +134,7 @@ def sync_container_repository(repo_name, remote_name, logger):
     try:
         command = pulp_container_commands["sync_container_repository"] % (repo_name, remote_name)
         result = execute_command(command,logger)
-        return True
+        return result
     except Exception as e:
         logger.error(f"Failed to synchronize repository {repo_name} with remote {remote_name}. Error: {e}")
         return False
@@ -215,6 +215,7 @@ def process_image(package,repo_store_path, status_file_path, cluster_os_type, cl
     """
     logger.info("#" * 30 + f" {process_image.__name__} start " + "#" * 30)
     try:
+        status = "Success"
         policy_type = "immediate"
         base_url, package_content = get_repo_url_and_content(package['package'])
         repo_name_prefix = "container_repo_"
@@ -222,7 +223,7 @@ def process_image(package,repo_store_path, status_file_path, cluster_os_type, cl
         remote_name = f"remote_{package['package'].replace('/', '_')}"
         if not create_container_repository(repository_name, logger):
             raise Exception(f"Failed to create repository: {repository_name}")
- 
+
         if "digest" in package:
             if not create_container_remote_digest(remote_name, base_url, package_content, policy_type,logger):
                 raise Exception(f"Failed to create remote digest: {remote_name}")
@@ -232,15 +233,19 @@ def process_image(package,repo_store_path, status_file_path, cluster_os_type, cl
 
             if not create_container_remote(remote_name, base_url, package_content, policy_type, tag_val, logger):
                 raise Exception(f"Failed to create remote: {remote_name}")
- 
+
         if not sync_container_repository(repository_name, remote_name, logger):
             raise Exception(f"Failed to sync repository: {repository_name}")
- 
+
         if not create_container_distribution(repository_name, package_content, logger):
             raise Exception(f"Failed to create distribution: {repository_name}")
- 
-        return "Success"
+
     except Exception as e:
+        status ="Failed"
         logger.error(f"Failed to process image: {package['package']}. Error: {e}")
-        return "Failed"
- 
+    finally:
+        # Write status to file
+        write_status_to_file(status_file_path, package['package'], package['type'], status, logger)
+
+        logger.info("#" * 30 + f" {process_image.__name__} end " + "#" * 30)
+        return status

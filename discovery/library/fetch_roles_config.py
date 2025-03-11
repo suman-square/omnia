@@ -17,10 +17,11 @@
 from ansible.module_utils.basic import AnsibleModule
 import warnings
 
-FIRST_LAYER_ROLES = {"service", "login", "compiler", "k8setcd", "k8shead", "slurmhead", "slurmdbd"}
-SECOND_LAYER_ROLES = {"default", "k8sworker", "slurmworker"}
+FIRST_LAYER_ROLES = {"service", "login", "compiler", "kube_control_plane", "etcd", "slurm_control_node", "slurm_dbd", "auth_server"}
+SECOND_LAYER_ROLES = {"default", "kube_node", "slurm_node"}
+NON_SERVICE_ROLES = (FIRST_LAYER_ROLES | SECOND_LAYER_ROLES) - {"service"}
 
-def validate_roles(roles, layer, module, first_layer_roles=FIRST_LAYER_ROLES, second_layer_roles=SECOND_LAYER_ROLES):
+def validate_roles(roles, layer, module, first_layer_roles=FIRST_LAYER_ROLES, second_layer_roles=SECOND_LAYER_ROLES, non_service_roles=NON_SERVICE_ROLES):
     """
     Validates roles based on multiple conditions:
     1. Roles should only belong to either first-layer or compute-layer roles.
@@ -52,8 +53,12 @@ def validate_roles(roles, layer, module, first_layer_roles=FIRST_LAYER_ROLES, se
         if not defined_roles.intersection(first_layer_roles):
             raise Exception("At least one role must be from the first-layer roles.")
     else:
-        if not defined_roles.intersection(second_layer_roles):
-            raise Exception("At least one role must be from the compute-layer roles.")
+        if 'service' in defined_roles:
+            if not defined_roles.intersection(second_layer_roles):
+                raise Exception(f"At least one role must be defined from - {second_layer_roles} in roles_config.yml")
+        else:
+            if not defined_roles.intersection(non_service_roles):
+                raise Exception(f"At least one role must be defined from - {non_service_roles} roles_config.yml")
 
     # Collect all groups used by first-layer and compute-layer roles
     first_layer_groups = {group for role in first_layer_roles for group in role_groups.get(role, [])}
@@ -101,7 +106,10 @@ def filter_roles(groups_data, roles_data, layer):
     if layer == "first":
         valid_roles = set(roles_data.keys()).intersection(FIRST_LAYER_ROLES)
     else:
-        valid_roles = set(roles_data.keys()).intersection(SECOND_LAYER_ROLES)
+        if 'service' in roles_data:
+            valid_roles = set(roles_data.keys()).intersection(SECOND_LAYER_ROLES)
+        else:
+            valid_roles = set(roles_data.keys()).intersection(NON_SERVICE_ROLES)
     return valid_roles
 
 

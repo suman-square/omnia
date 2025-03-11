@@ -413,6 +413,7 @@ post_setup_config() {
     fi
 
     # Copy input files from /omnia to /opt/omnia/project_default/ inside omnia_core container
+    podman exec -u root omnia_core bash -c "cd /omnia && git pull"
     echo -e "${BLUE} Moving input files from /omnia dir to project_default folder.${NC}"
     podman exec -u root omnia_core bash -c "
     mkdir -p /opt/omnia/input/project_default

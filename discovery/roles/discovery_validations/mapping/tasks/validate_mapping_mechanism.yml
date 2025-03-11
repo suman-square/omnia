@@ -16,6 +16,7 @@
 - name: Initialize variable
   ansible.builtin.set_fact:
     discovery_mech_mapping: false
+    mapping_file_status: false
 
 - name: Check that the pxe mapping file path exists
   ansible.builtin.stat:
@@ -31,5 +32,5 @@
 
 - name: Set discovery_mech_mapping to true
   ansible.builtin.set_fact:
-    discovery_mech_mapping: true
+    mapping_file_status: true
   when: pxe_stat_result.stat.exists

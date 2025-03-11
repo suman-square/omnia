@@ -15,13 +15,14 @@
 
 - name: Initialize variable
   ansible.builtin.set_fact:
-    discovery_mech_bmc: false
+    discovery_mech_dynamic_bmc: false
 
 - name: Assign value if config file exists
   ansible.builtin.set_fact:
-    discovery_mech_bmc: true
+    discovery_mech_dynamic_bmc: true
   when:
-    - network_data.bmc_network.nic_name | default('', true) | length > 0
+    - '"first_layer" not in ansible_run_tags'
+    - network_data.bmc_network.oim_nic_name | default('', true) | length > 0
     - network_data.bmc_network.static_range | length > 0
     - network_data.bmc_network.dynamic_range | length > 0
     - network_data.bmc_network.netmask_bits | int >= 1

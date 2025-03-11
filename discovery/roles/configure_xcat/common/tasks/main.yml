@@ -20,12 +20,8 @@
     MANPATH: "{{ xcat_manpath_env }}"
     PERL_BADLANG: "{{ perl_badlang_env }}"
   block:
-    - name: Set oim_os
-      ansible.builtin.set_fact:
-        oim_os: "{{ ansible_distribution | lower }}"
-
-    - name: Include vars for {{ oim_os }}
-      ansible.builtin.include_vars: "{{ role_path }}/../{{ oim_os }}/vars/main.yml"
+    - name: Include vars for {{ provision_os }}
+      ansible.builtin.include_vars: "{{ role_path }}/../{{ provision_os }}/vars/main.yml"
 
 #    - name: Configure proxy
 #      ansible.builtin.include_tasks: configure_proxy.yml
@@ -46,5 +42,5 @@
     - name: Fetch osimage name
       ansible.builtin.include_tasks: fetch_osimage.yml
 
-    - name: Configure xCAT on {{ oim_os }}
-      ansible.builtin.include_tasks: "{{ role_path }}/../{{ oim_os }}/tasks/main.yml"
+    - name: Configure xCAT on {{ provision_os }}
+      ansible.builtin.include_tasks: "{{ role_path }}/../{{ provision_os }}/tasks/main.yml"

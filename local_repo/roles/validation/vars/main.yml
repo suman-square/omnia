@@ -173,17 +173,6 @@ rhel_os_url_fail_msg: "Failed. Please ensure rhel_os_url is non empty list and
 check if there is any indentation error for variable names in {{ project_input_path }}/local_repo_config.yml"
 rhel_os_url_fail_url_gpg_key_msg: "Failed. Each item in rhel_os_url should have 'url', 'gpgkey' and 'name' keys defined"
 
-# Usage: include_provision_credentials_inputs.yml
-docker_password_fail_msg: "docker password must be mentioned when docker_username is defined."
-warning_wait_time: 30
-warning_msg_docker_username_password_incomplete: "[WARNING] Docker credentials not provided in provision_config_credentials.yml.
-Proceeding without docker credentials."
-provision_config_credentials_filename: "{{ project_input_path }}/provision_config_credentials.yml"
-provision_credentials_vault_path: "{{ project_input_path }}/.provision_credential_vault_key"
-ansible_vault_search_key: "$ANSIBLE_VAULT;"
-provision_config_credentials_syntax_fail_msg: "Failed. Syntax errors present in provision_config_credentials.yml. Fix errors and re-run playbook again."
-conf_file_mode: "0644"
-
 # Usage: validate_bcm_roce.yml
 bcm_roce_json_file: "{{ project_input_path }}/config/{{ cluster_os_type }}/{{ cluster_os_version }}/bcm_roce.json"
 fail_msg_bcm_roce_json_file: "bcm_roce.json file is absent. Broadcom RoCE driver packages will not be downloaded."

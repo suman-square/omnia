@@ -82,6 +82,8 @@ xcat_init_failed_msg: "xcat-init.bash execution failed. Check the logs in /opt/o
 pgsqlsetup_path: /opt/xcat/bin/pgsqlsetup
 postgres_set_password_fail_msg: "Failed to set Postgresql password for user - postgres."
 pg_hba_conf_path: /var/lib/pgsql/data/pg_hba.conf
+postgresql_conf_path: "/var/lib/pgsql/data/postgresql.conf"
+cfgloc_path: "/etc/xcat/cfgloc"
 postgres_file_path: "/opt/omnia/.postgres/"
 directory_permissions: "0600"
 provision_shared_library_path: /opt/omnia/shared_libraries/provision

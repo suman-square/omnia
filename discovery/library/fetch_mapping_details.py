@@ -69,7 +69,7 @@ def main():
 
         filtered_nodes = fetch_mapping_details(groups_roles_info, node_df)
 
-        module.exit_json(changed=False, mapping_details=filtered_nodes)
+        module.exit_json(changed=False, mapping_details=filtered_nodes, mapping_required=bool(filtered_nodes))
 
     except Exception as e:
         module.fail_json(error=str(e))

@@ -50,20 +50,27 @@
 - name: Validate BMC parameters
   when: bmc_details_status
   block:
-    - name: Validate BMC static and dynamic range
+    - name: Validate BMC dynamic range
       ansible.builtin.assert:
         that:
-          - (bmc_static_start_range == md_bmc_static_start_range)
-          - (bmc_static_end_range == md_bmc_static_end_range)
           - (bmc_dynamic_start_range == md_bmc_dynamic_start_range)
           - (bmc_dynamic_end_range == md_bmc_dynamic_end_range)
         success_msg: "{{ ranges_success_msg }}"
         fail_msg: "{{ ranges_fail_msg }}"
       when:
-        - md_bmc_static_start_range is defined
-        - md_bmc_static_end_range is defined
         - md_bmc_dynamic_start_range is defined
         - md_bmc_dynamic_end_range is defined
+
+    - name: Validate BMC static range
+      ansible.builtin.assert:
+        that:
+          - (bmc_conversion_static_start_range == md_bmc_conversion_static_start_range)
+          - (bmc_conversion_static_end_range == md_bmc_conversion_static_end_range)
+        success_msg: "{{ ranges_success_msg }}"
+        fail_msg: "{{ ranges_fail_msg }}"
+      when:
+        - md_bmc_conversion_static_start_range is defined
+        - md_bmc_conversion_static_end_range is defined
 
     - name: Validate bmc_nic_subnet
       ansible.builtin.assert:

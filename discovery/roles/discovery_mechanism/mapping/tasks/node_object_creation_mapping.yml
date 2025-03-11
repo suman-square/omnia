@@ -25,7 +25,7 @@
 
 - name: Create node object from mapping_details JSON
   ansible.builtin.shell: >
-    {{ xcat_path }}/mkdef -t node "{{ item.hostname.split('.')[0] }}" groups={{ mapping_node_group }},all
+    {{ xcat_path }}/mkdef -t node "{{ item.hostname.split('.')[0] }}" groups={{ mapping_node_group }},{{ item.roles }},all
     ip="{{ item.admin_ip | trim }}" mac="{{ item.admin_mac | trim }}"
     hostnames="{{ item.hostname | trim }}" serial="{{ item.service_tag | trim }}"
     netboot=xnba arch={{ item.architecture }} -f
@@ -40,7 +40,7 @@
 
 - name: Create node object from mapping_details JSON
   ansible.builtin.shell: >
-    {{ xcat_path }}/mkdef -t node "{{ item.hostname.split('.')[0] }}" groups={{ mapping_node_group }},{{ mapping_bmc_node_group }},all
+    {{ xcat_path }}/mkdef -t node "{{ item.hostname.split('.')[0] }}" groups={{ mapping_node_group }},{{ mapping_bmc_node_group }},{{ item.roles }},all
     ip="{{ item.admin_ip | trim }}" bmc="{{ item.bmc_ip | trim }}" mgt=ipmi
     mac="{{ item.admin_mac | trim }}" serial="{{ item.service_tag | trim }}"
     hostnames="{{ item.hostname | trim }}" netboot=xnba arch={{ item.architecture }} -f

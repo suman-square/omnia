@@ -50,7 +50,8 @@ xcat_firewall_ports:
   - "162/tcp"
   - "162/udp"
   - "2240/tcp"
-
+  - "5432/tcp"
+  - "5432/udp"
 
 pcs_firewall_ports:
   - "5404-5405/udp"
@@ -71,5 +72,5 @@ prepare_oim_completion_msg: |
 login_cmd: "podman login -u {{ docker_username }} -p {{ docker_password }}"
 retry_count: "5"
 delay_time: "10"
-podman_login_fail_msg: "Podman login failed. Please ensure the podman login credentials in the input/provision_config_credentials.yml are valid.
+podman_login_fail_msg: "Podman login failed. Please ensure the podman login credentials in the input/omnia_config_credentials.yml are valid.
 If they are, this error can occur due to a pull limit issue or multiple requests. Please try running the playbook again after waiting for a while."

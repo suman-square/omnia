@@ -18,8 +18,8 @@
 
 - name: Validate mapping file
   ansible.builtin.include_tasks: validate_mapping_file.yml
-  when: discovery_mech_mapping
+  when: mapping_file_status
 
 - name: Create mapping data
   ansible.builtin.include_tasks: create_mapping_data.yml
-  when: discovery_mech_mapping
+  when: mapping_file_status

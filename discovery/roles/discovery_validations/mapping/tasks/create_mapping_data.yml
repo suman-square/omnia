@@ -22,6 +22,7 @@
 - name: Set fact for mapping_details
   ansible.builtin.set_fact:
     mapping_details: "{{ mapping_details_output.mapping_details }}"
+    discovery_mech_mapping: "{{ mapping_details_output.mapping_required }}"
 
 - name: Show mapping data
   ansible.builtin.debug:

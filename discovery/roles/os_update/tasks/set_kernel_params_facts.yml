@@ -43,4 +43,3 @@
     - inventory_hostname != "omnia_provision"
     - "'Categories' in hostvars[inventory_hostname]"
     - hostvars[inventory_hostname]['Categories'] in item
-

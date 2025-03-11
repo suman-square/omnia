@@ -175,7 +175,7 @@ def validate_col(df):
     for i in mandatory_col:
         if i not in curr_cols:
             sys.exit(
-                " Please provide a valid mapping file. It should contain SERVICE_TAG,ADMIN_MAC,HOSTNAME,ADMIN_IP,"
+                " Please provide a valid mapping file. It should contain GROUP_NAME SERVICE_TAG,ADMIN_MAC,HOSTNAME,ADMIN_IP,"
                 "BMC_IP.")
 
     # Calculate null columns

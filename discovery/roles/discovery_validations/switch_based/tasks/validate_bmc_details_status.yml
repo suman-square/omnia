@@ -33,16 +33,9 @@
     msg: "{{ bmc_network_details_fail_msg }}"
   when: not bmc_details_status
 
-- name: Warning - bmc discovery will be skipped
-  ansible.builtin.pause:
-    seconds: "{{ warning_wait_time }}"
-    prompt: "{{ bmc_discovery_warning_msg }}"
-  when: discovery_mech_bmc
-
 - name: Set discovery_mech_switch_based to true
   ansible.builtin.set_fact:
     discovery_mech_switch_based: true
-    discovery_mech_bmc: false
   when:
     - bmc_details_status
     - switch_details_status

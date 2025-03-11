@@ -26,11 +26,13 @@
       containers.podman.podman_container:
         name: "{{ kubespray_container_name }}"
         state: stopped
+      failed_when: false
 
     - name: Remove Kubespray container
       containers.podman.podman_container:
         name: "{{ kubespray_container_name }}"
         state: absent
+        force_delete: true
 
     - name: Remove Kubespray directory
       ansible.builtin.file:

@@ -19,51 +19,48 @@
     PATH: "{{ ansible_env.PATH }}:{{ xcat_path_env }}"
     MANPATH: "{{ xcat_manpath_env }}"
     PERL_BADLANG: "{{ perl_badlang_env }}"
-  when: discovery_mech_bmc
   block:
     - name: Include vars
       ansible.builtin.include_vars: "{{ role_path }}/../../../discovery/roles/discovery_mechanism/mtms/vars/main.yml"
 
-    - name: Check static node objects are empty or not
-      ansible.builtin.include_tasks: fetch_static_discover_nodes.yml
+    - name: Provision bmc static nodes
+      when: discovery_mech_static_bmc
+      block:
+        - name: Check static node objects are empty or not
+          ansible.builtin.include_tasks: fetch_static_nodes.yml
 
-    - name: Power off the nodes for static
-      ansible.builtin.include_tasks: power_off_nodes.yml
-      with_items: "{{ bmc_static_nodes }}"
-      when: bmc_static_node_status
+        - name: Power off the nodes for static
+          ansible.builtin.include_tasks: power_off_nodes.yml
+          with_items: "{{ bmc_static_nodes }}"
+          when: bmc_static_node_status
 
-    - name: Power off the nodes for discovery
-      ansible.builtin.include_tasks: power_off_nodes.yml
-      with_items: "{{ bmc_discover_nodes }}"
-      when: bmc_discover_node_status
+    - name: Provision bmc dynamic nodes
+      when: discovery_mech_dynamic_bmc
+      block:
+        - name: Fetch all the dhcp enabled nodes
+          ansible.builtin.include_tasks: fetch_dynamic_nodes.yml
 
-    - name: Fetch all the dhcp enabled nodes
-      ansible.builtin.include_tasks: fetch_dynamic_nodes.yml
-
-    - name: Power off the nodes for dynamic
-      ansible.builtin.include_tasks: power_off_nodes.yml
-      with_items: "{{ dynamic_nodes.stdout_lines }}"
-      when:
-        - dynamic_nodes.stdout_lines != ""
+        - name: Power off the nodes for dynamic
+          ansible.builtin.include_tasks: power_off_nodes.yml
+          with_items: "{{ dynamic_nodes.stdout_lines }}"
+          when:
+            - dynamic_nodes.stdout_lines != ""
 
     - name: Wait for 5 mins before power on, since it takes some time for nodes to properly power off.
       ansible.builtin.wait_for:
         timeout: "{{ on_timeout }}"
+      when: discovery_mech_static_bmc or discovery_mech_dynamic_bmc
 
     - name: Power on static nodes
-      ansible.builtin.include_tasks: set_provision_image_mtms.yml
+      ansible.builtin.include_tasks: power_on_nodes.yml
       with_items: "{{ bmc_static_nodes }}"
       when:
+        - discovery_mech_static_bmc
         - bmc_static_node_status
 
-    - name: Power on discovered nodes
-      ansible.builtin.include_tasks: set_provision_image_mtms.yml
-      with_items: "{{ bmc_discover_nodes }}"
-      when:
-        - bmc_discover_node_status
-
     - name: Power on dynamic nodes
-      ansible.builtin.include_tasks: set_provision_image_mtms.yml
+      ansible.builtin.include_tasks: power_on_nodes.yml
       with_items: "{{ dynamic_nodes.stdout_lines }}"
       when:
+        - discovery_mech_dynamic_bmc
         - dynamic_nodes.stdout_lines != ""

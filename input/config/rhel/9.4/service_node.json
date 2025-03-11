@@ -1,0 +1,11 @@
+{
+    "service_node": {
+      "cluster": [
+      {
+        "package": "xCATsn",
+        "type": "rpm",
+        "repo_name": "xcat-core"
+      }
+      ]
+    }
+ }

@@ -19,7 +19,6 @@ This module provides functionality for running BMC discovery on a range of IP ad
 import re
 import sys, os
 import subprocess
-import calculate_ip_details
 
 
 def validate(ip_range):
@@ -45,21 +44,10 @@ def validate(ip_range):
         raise ValueError("Invalid IP range format")
     return ip_range
 
-if len(sys.argv) <= 3:
-    bmc_dynamic_range = sys.argv[1]
-    bmc_dynamic_range = validate(bmc_dynamic_range)
-    dynamic_stanza = os.path.abspath(sys.argv[2])
-
-
-# Pass proper variables
-if len(sys.argv) > 3:
-    discovery_ranges = sys.argv[1]
-    discover_stanza = os.path.abspath(sys.argv[2])
-    bmc_static_subnet = sys.argv[3]
-    static_stanza = os.path.abspath(sys.argv[4])
-    netmask_bits = sys.argv[5]
-    bmc_static_range = sys.argv[6]
-    bmc_static_range = validate(bmc_static_range)
+bmc_range = sys.argv[1]
+bmc_range = validate(bmc_range)
+stanza_path = os.path.abspath(sys.argv[2])
+bmc_mode = sys.argv[3]
 
 def cal_ranges(start_ip, end_ip):
     """
@@ -94,7 +82,7 @@ def cal_ranges(start_ip, end_ip):
     return range_status, final_range
 
 
-def create_ranges_dynamic(bmc_mode):
+def create_ranges():
     """
     Create ranges dynamically based on the given BMC mode.
 
@@ -104,71 +92,16 @@ def create_ranges_dynamic(bmc_mode):
     Returns:
         None
     """
-    temp = bmc_dynamic_range.split('-')
+    temp = bmc_range.split('-')
     start_ip = temp[0].split('.')
     end_ip = temp[1].split('.')
     output = cal_ranges(start_ip, end_ip)
     range_status = output[0]
     final_range = output[1]
     if range_status == "true":
-        run_bmc_discover(final_range, dynamic_stanza, bmc_mode)
+        run_bmc_discover(final_range)
 
-
-def create_ranges_static(bmc_mode):
-    """
-	Create static ranges based on the given bmc_mode.
-
-	Parameters:
-		bmc_mode (str): The mode of the BMC.
-
-	Returns:
-		None
-	"""
-
-    temp = bmc_static_range.split('-')
-    start_ip = temp[0].split('.')
-    end_ip = temp[1].split('.')
-    output = cal_ranges(start_ip, end_ip)
-    range_status = output[0]
-    final_range = output[1]
-    if range_status == "true":
-        run_bmc_discover(final_range, static_stanza, bmc_mode)
-
-
-def create_ranges_discovery(bmc_mode):
-    """
-	Create ranges for BMC discovery.
-
-	Parameters:
-		bmc_mode (str): The mode of the BMC.
-
-	Returns:
-		None
-	"""
-
-    discover_range_list = discovery_ranges.split(',')
-    for ip_range in discover_range_list:
-        ip_obj = validate(ip_range)
-        temp = ip_obj.split('-')
-        start_ip = temp[0].split('.')
-        end_ip = temp[1].split('.')
-        discover_subnet = calculate_ip_details.cal_ip_details(temp[0], netmask_bits)[1]
-        if discover_subnet != bmc_static_subnet:
-            output = cal_ranges(start_ip, end_ip)
-            range_status = output[0]
-            final_range = output[1]
-            if range_status == "true":
-                run_bmc_discover(final_range, discover_stanza, bmc_mode)
-
-        elif discover_subnet == bmc_static_subnet:
-            output = cal_ranges(start_ip, end_ip)
-            range_status = output[0]
-            final_range = output[1]
-            if range_status == "true":
-                run_bmc_discover(final_range, static_stanza, bmc_mode)
-
-
-def run_bmc_discover(final_range, stanza_path, bmc_mode):
+def run_bmc_discover(final_range):
     """
 	Runs BMC discovery on a range of IP addresses.
     Creates proper stanza file with results of bmcdiscovery, else it gets timed out.
@@ -176,49 +109,26 @@ def run_bmc_discover(final_range, stanza_path, bmc_mode):
 
 	Parameters:
 		final_range (str): The range of IP addresses to discover.
-		stanza_path (str): The path to the stanza file.
-		bmc_mode (str): The mode of the BMC.
 
 	Returns:
 		None
 	"""
 
 
-    if bmc_mode == "static" or bmc_mode == "discovery":
+    if bmc_mode == "static":
         command = ["/opt/xcat/bin/bmcdiscover", "--range", final_range, "-z"]
     elif bmc_mode == "dynamic":
         command = ["/opt/xcat/bin/bmcdiscover", "--range", final_range, "-z", "-w"]
     try:
         node_objs = subprocess.run(command, capture_output=True, timeout=600, check=True)
-        with open(stanza_path, 'r+') as f:
-            f.write(node_objs.stdout.decode())
+        if os.path.exists(stanza_path):
+            with open(stanza_path, 'r+') as f:
+                f.write(node_objs.stdout.decode())
+        else:
+            print(f"File {stanza_path} does not exist. Unable to write to it.")
     except subprocess.TimeoutExpired:
         print(
             "The discovery did not finish within the timeout period.Please provide a smaller range or a correct range.")
-
-
-def create_ranges():
-    """
-	Calls the function to create ranges for different mtms discovery mode.
-
-	Parameters:
-		None
-
-	Returns:
-		None
-	"""
-
-    if len(sys.argv) > 3:
-        if discovery_ranges != "0.0.0.0":
-            bmc_mode = "discovery"
-            create_ranges_discovery(bmc_mode)
-        if bmc_static_range != "":
-            bmc_mode = "static"
-            create_ranges_static(bmc_mode)
-    elif len(sys.argv) <= 3:
-        if bmc_dynamic_range != "":
-            bmc_mode = "dynamic"
-            create_ranges_dynamic(bmc_mode)
 
 
 create_ranges()

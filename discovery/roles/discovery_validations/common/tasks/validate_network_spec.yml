@@ -93,8 +93,8 @@
         argv:
           - "{{ python_version }}"
           - "{{ validation_range_file }}"
-          - "{{ bmc_static_start_range }}"
-          - "{{ bmc_static_end_range }}"
+          - "{{ bmc_conversion_static_start_range }}"
+          - "{{ bmc_conversion_static_end_range }}"
           - "{{ item.value.static_range.split('-') | first }}"
           - "{{ item.value.static_range.split('-') | last }}"
       register: range_validation_status
@@ -237,8 +237,8 @@
         argv:
           - "{{ python_version }}"
           - "{{ validation_range_file }}"
-          - "{{ bmc_static_start_range }}"
-          - "{{ bmc_static_end_range }}"
+          - "{{ bmc_conversion_static_start_range }}"
+          - "{{ bmc_conversion_static_end_range }}"
           - "{{ (item.value.CIDR | string + '/' + item.value.netmask_bits | string) | ansible.utils.ipaddr('first_usable') }}"
           - "{{ (item.value.CIDR | string + '/' + item.value.netmask_bits | string) | ansible.utils.ipaddr('last_usable') }}"
       register: range_validation_status

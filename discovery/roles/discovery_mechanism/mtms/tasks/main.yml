@@ -13,57 +13,45 @@
 # limitations under the License.
 ---
 
-- name: Initialize default correlation value
-  ansible.builtin.set_fact:
-    correlation_status: "{{ network_data.admin_network.correlation_to_admin }}"
-    reassignment_status: "{{ network_data.bmc_network.reassignment_to_static }}"
-
-- name: Update IPMI table and create genesis images
-  when: discovery_mech_bmc
+- name: Perform operations for static range
+  when: bmc_static_status
   block:
-    - name: Update xcat networks table with discovery ranges
-      ansible.builtin.include_tasks: update_xcat_network_discovery_range.yml
-      when: bmc_discover_range_status
+    - name: BMC discover for first layer of nodes
+      ansible.builtin.include_tasks: bmc_first_layer.yml
+      when:
+        - '"first_layer" in ansible_run_tags'
+        - item.value.bmc_static_status is defined
+        - item.value.bmc_static_status
+      loop: "{{ groups_roles_info | dict2items }}"
 
-    - name: Perform operations on discovery range
-      when: bmc_discover_range_status or bmc_static_status
-      block:
-        - name: Perform bmc discover on discovery range
-          ansible.builtin.include_tasks: bmc_discover_ranges.yml
+    - name: Configure dhcp
+      ansible.builtin.include_tasks: "{{ role_path }}/../common/tasks/configure_dhcp.yml"
 
-        - name: Create database for discovery bmc mode
-          ansible.builtin.include_tasks: update_db_static.yml
+- name: Perform operations for dynamic range
+  when:
+    - discovery_mech_dynamic_bmc
+  block:
+    - name: Before starting dynamic discovery wait for "{{ dhcp_timeout }}"
+      ansible.builtin.pause:
+        seconds: "{{ dhcp_timeout }}"
+        prompt: "{{ dhcp_timeout_msg }}"
 
-        - name: Update node objects for static bmc mode
-          ansible.builtin.include_tasks: update_node_obj.yml
+    - name: Enable IPMI on dynamic iDRACs
+      ansible.builtin.include_tasks: dynamic_ipmi_enable.yml
 
-        - name: Configure dhcp
-          ansible.builtin.include_tasks: "{{ role_path }}/../common/tasks/configure_dhcp.yml"
+    - name: Perform BMC Discover on dynamic range
+      ansible.builtin.include_tasks: bmc_dynamic_discovery.yml
 
-    - name: Perform operations for dynamic range
-      when: bmc_dynamic_status
-      block:
-        - name: Before starting dynamic discovery wait for "{{ dhcp_timeout }}"
-          ansible.builtin.pause:
-            seconds: "{{ dhcp_timeout }}"
-            prompt: "{{ dhcp_timeout_msg }}"
+    - name: Update node objects for dynamic bmc_mode
+      ansible.builtin.include_tasks: update_db_dynamic.yml
+      when: dynamic_final_status
 
-        - name: Enable IPMI on dynamic iDRACs
-          ansible.builtin.include_tasks: dynamic_ipmi_enable.yml
+    - name: Update node objects for static bmc mode
+      ansible.builtin.include_tasks: update_node_obj.yml
+      when: dynamic_final_status
 
-        - name: Perform BMC Discover on dynamic range
-          ansible.builtin.include_tasks: bmc_dynamic_discovery.yml
-
-        - name: Update node objects for dynamic bmc_mode
-          ansible.builtin.include_tasks: update_db_dynamic.yml
-          when: dynamic_final_status
-
-        - name: Update node objects for static bmc mode
-          ansible.builtin.include_tasks: update_node_obj.yml
-          when: dynamic_final_status
-
-        - name: Configure dhcp
-          ansible.builtin.include_tasks: "{{ role_path }}/../common/tasks/configure_dhcp.yml"
+    - name: Configure dhcp
+      ansible.builtin.include_tasks: "{{ role_path }}/../common/tasks/configure_dhcp.yml"
 
 - name: Delete the stanzas file
   ansible.builtin.include_tasks: delete_stanzas.yml

@@ -16,7 +16,7 @@
 - name: Validate admin_nic details
   ansible.builtin.assert:
     that:
-      - network_data.admin_network.nic_name | default("", true) | length > 0
+      - network_data.admin_network.oim_nic_name | default("", true) | length > 0
       - network_data.admin_network.netmask_bits | default("", true) | length > 0
       - network_data.admin_network.static_range | default("", true) | length > 0
       - network_data.admin_network.dynamic_range | default("", true) | length > 0
@@ -91,7 +91,7 @@
 - name: Set admin_nic_ip and admin_nic
   ansible.builtin.set_fact:
     admin_nic_ip: "{{ network_data.admin_network.primary_oim_admin_ip }}"
-    admin_nic: "{{ network_data.admin_network.nic_name }}"
+    admin_nic: "{{ network_data.admin_network.oim_nic_name }}"
 
 - name: Ensure NIC exists on the system
   ansible.builtin.assert:

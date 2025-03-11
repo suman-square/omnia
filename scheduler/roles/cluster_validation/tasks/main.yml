@@ -33,8 +33,17 @@
 - name: Fetch omnia_config.yml inputs
   ansible.builtin.include_tasks: fetch_omnia_inputs.yml
 
+- name: Fetch and Validate network_spec.yml inputs
+  ansible.builtin.include_tasks: validate_network_spec.yml
+
 - name: Fetch storage_config.yml inputs
   ansible.builtin.include_tasks: fetch_storage_config.yml
 
 - name: Include gather_facts playbook
   ansible.builtin.include_tasks: gather_fact_resolution.yml
+
+- name: Include provision_config_credentials inputs
+  ansible.builtin.include_tasks: include_provision_config_credentials.yml
+
+- name: Generate k8s var file
+  ansible.builtin.include_tasks: generate_k8s_vars.yml

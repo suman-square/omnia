@@ -17,8 +17,6 @@
   ansible.builtin.set_fact:
     bmc_dynamic_start_range: ""
     bmc_dynamic_end_range: ""
-    bmc_static_start_range: ""
-    bmc_static_end_range: ""
     bmc_details_status: false
 
 - name: Check metadata.yml file existence
@@ -46,14 +44,10 @@
 
     - name: Set bmc nic ranges
       ansible.builtin.set_fact:
-        bmc_dynamic_start_range: "{{ md_bmc_static_start_range }}"
-        bmc_dynamic_end_range: "{{ md_bmc_static_end_range }}"
-        bmc_static_start_range: "{{ md_bmc_dynamic_start_range }}"
-        bmc_static_end_range: "{{ md_bmc_dynamic_end_range }}"
+        bmc_dynamic_start_range: "{{ md_bmc_conversion_static_start_range }}"
+        bmc_dynamic_end_range: "{{ md_bmc_conversion_static_end_range }}"
         bmc_details_status: true
       when:
-        - md_bmc_static_start_range is defined
-        - md_bmc_static_end_range is defined
         - md_bmc_dynamic_start_range is defined
         - md_bmc_dynamic_end_range is defined
   rescue:

@@ -27,22 +27,7 @@
   when:
     - timezone | default("", true) | length < 1 or
       language | default("", true) | length < 1 or
-      default_lease_time | default("", true) | string | length < 1 or
-      provision_os | default("", true) | length < 1 or
-      provision_os_version | default("", true) | string | length < 1
-
-- name: Assert nodename
-  ansible.builtin.assert:
-    that:
-      - node_name | length > 1
-      - '"_" not in node_name'
-      - '"." not in node_name'
-      - '" " not in node_name'
-      - '"node-" not in node_name'
-    quiet: true
-    fail_msg: "{{ nodename_chars_fail_msg }}"
-  when:
-    - discovery_mech_bmc or discovery_mech_switch_based
+      default_lease_time | default("", true) | string | length < 1
 
 - name: Validate default lease time
   ansible.builtin.assert:

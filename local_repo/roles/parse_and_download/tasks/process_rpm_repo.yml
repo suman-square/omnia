@@ -13,7 +13,7 @@
 # limitations under the License.
 ---
 
-- name: Call prepare_tasklist Python module to prepare software packages tasklist
+- name: Prepare software packages tasklist
   prepare_tasklist:
     csv_file_path: "{{ base_path }}"
     user_json_file: "{{ user_json_file }}"
@@ -21,7 +21,7 @@
     log_dir: "{{ base_path }}"
   register: result
 
-- name: Process RPM config
+- name: Process URL mirrors from local_repo_config
   process_rpm_config:
     local_config: "{{ result.local_config }}"
     log_dir: "{{ base_path }}"

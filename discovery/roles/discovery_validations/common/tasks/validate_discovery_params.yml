@@ -22,8 +22,16 @@
 - name: Validate the switch based related parameters
   ansible.builtin.include_tasks: "{{ role_path }}/../switch_based/tasks/main.yml"
 
-- name: Validate if all discovery mechanisms invalid
+- name: Validate if all discovery mechanisms valid for first layer execution
   ansible.builtin.assert:
     that:
-      - discovery_mech_bmc or discovery_mech_mapping or discovery_mech_switch_based
-    fail_msg: "{{ discovery_mechanism_fail_msg }}"
+      - bmc_static_status or discovery_mech_mapping
+    fail_msg: "{{ first_layer_discovery_mechanism_fail_msg }}"
+  when: '"first_layer" in ansible_run_tags'
+
+- name: Validate if all discovery mechanisms valid for default execution
+  ansible.builtin.assert:
+    that:
+      - bmc_static_status or discovery_mech_mapping or discovery_mech_switch_based or discovery_mech_dynamic_bmc
+    fail_msg: "{{ default_layer_discovery_mechanism_fail_msg }}"
+  when: '"first_layer" not in ansible_run_tags'

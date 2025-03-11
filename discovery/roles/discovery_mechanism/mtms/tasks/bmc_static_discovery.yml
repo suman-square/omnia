@@ -13,16 +13,22 @@
 # limitations under the License.
 ---
 
-- name: BMC Discover on Static ranges
-  ansible.builtin.shell: >-
-    set -o pipefail && \
-    {{ xcat_path }}/bmcdiscover --range {{ bmc_static_range }} -z > {{ static_ip_file }}
-  register: static_discovery
-  changed_when: false
+# Call the discover ranges python file
+- name: Create files for stanzas
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: touch
+    mode: "{{ file_perm }}"
+  with_items: "{{ stanza_paths }}"
 
-- name: Assert static discovery
-  ansible.builtin.assert:
-    that:
-      - " '{{ no_bmc_found }}' not in static_discovery.stderr"
-    fail_msg: "{{ static_discovery_fail_msg }}"
-  when: not bmc_dynamic_status
+- name: Run bmc discover for static and discovery nodes
+  block:
+    - name: Run bmc discover on ranges
+      ansible.builtin.command: |
+        {{ python_version }} {{ bmcdiscover_python }} {{ item.value.bmc_details.static_range }} {{ static_ip_file }} {{ static_mode }}
+      changed_when: false
+      register: output_bmc_discover
+  rescue:
+    - name: Bmc discover not done properly
+      ansible.builtin.fail:
+        msg: "{{ output_bmc_discover.stderr }}"

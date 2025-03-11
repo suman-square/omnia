@@ -18,6 +18,7 @@ omnia_nfs_share: "{{ hostvars['localhost']['oim_shared_path'] }}/omnia"
 
 # Usage: cleanup_pcs.yml
 pcs_container_name: "omnia_pcs"
+omnia_container_name: "omnia_core"
 pcs_directory_cleanup:
   - "{{ omnia_nfs_share }}/pcs"
   - "{{ omnia_nfs_share }}/log/pcs"
@@ -31,8 +32,9 @@ pcs_firewall_ports:
 # Usage: cleanup_pulp.yml
 pulp_container_name: "omnia_pulp"
 pulp_cleanup_directory:
-  - "{{ omnia_nfs_share }}/pulp"
+  - "{{ omnia_nfs_share }}/pulp/pulp_ha/cli.toml"
   - "{{ omnia_nfs_share }}/log/pulp"
+  - "{{ omnia_nfs_share }}/pulp/settings"
 
 # Usage: cleanup_provision.yml
 provision_container_name: "omnia_provision"

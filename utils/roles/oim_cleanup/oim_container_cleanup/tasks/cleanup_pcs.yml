@@ -1,3 +1,4 @@
+
 #  Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,16 +23,24 @@
 - name: Stop and Remove PCS container
   when: pcs_container_status.containers | length != 0
   block:
+    - name: Unmanage omnia_core resource inside PCS container
+      containers.podman.podman_container_exec:
+        name: "{{ pcs_container_name }}"
+        command: "pcs resource unmanage {{ omnia_container_name }}"
+      register: pcs_unmanage_result
+      failed_when: false
 
     - name: Stop the PCS container
       containers.podman.podman_container:
         name: "{{ pcs_container_name }}"
         state: stopped
+      failed_when: false
 
     - name: Remove pcs container
       containers.podman.podman_container:
         name: "{{ pcs_container_name }}"
         state: absent
+        force_delete: true
 
     - name: Stop omnia_pcs service
       ansible.builtin.systemd:

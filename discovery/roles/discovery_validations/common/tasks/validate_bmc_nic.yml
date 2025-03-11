@@ -13,6 +13,11 @@
 #  limitations under the License.
 ---
 
+- name: Initialize variables
+  ansible.builtin.set_fact:
+    bmc_nic_ip: ""
+    bmc_nic: ""
+
 - name: Assert BMC network details
   when:
     - bmc_details_status
@@ -20,10 +25,10 @@
     - name: Validate bmc_nic details
       ansible.builtin.assert:
         that:
-          - network_data.bmc_network.nic_name | default("", true) | length > 0
+          - network_data.bmc_network.oim_nic_name | default("", true) | length > 0
           - network_data.bmc_network.netmask_bits | default("", true) | length > 0
-          - network_data.bmc_network.static_range | default("", true) | length > 0
           - network_data.bmc_network.dynamic_range | default("", true) | length > 0
+          - network_data.bmc_network.dynamic_conversion_static_range | default("", true) | length > 0
         success_msg: "{{ success_msg_bmc_nic_details }}"
         fail_msg: "{{ fail_msg_bmc_nic_details }}"
 
@@ -33,6 +38,24 @@
           - network_data.bmc_network.netmask_bits | int >= 1
           - network_data.bmc_network.netmask_bits | int <= 32
         fail_msg: "{{ fail_msg_bmc_netmask_bits }}"
+
+    - name: Validate BMC reassignment_to_static
+      ansible.builtin.assert:
+        that:
+          - network_data.bmc_network.reassignment_to_static == true or
+            network_data.bmc_network.reassignment_to_static == false
+        fail_msg: "{{ reassignment_to_static_failure_msg }}"
+      when: network_data.bmc_network.reassignment_to_static != None
+
+    - name: Set default reassignment status
+      ansible.builtin.set_fact:
+        reassignment_status: false
+      when: network_data.bmc_network.reassignment_to_static == None
+
+    - name: Set reassignment status
+      ansible.builtin.set_fact:
+        reassignment_status: "{{ network_data.bmc_network.reassignment_to_static }}"
+      when: network_data.bmc_network.reassignment_to_static != None
 
     - name: Validate BMC network gateway
       block:
@@ -61,23 +84,6 @@
         bmc_dynamic_start_range: "{{ network_data.bmc_network.dynamic_range | split('-') | first }}"
         bmc_dynamic_end_range: "{{ network_data.bmc_network.dynamic_range | split('-') | last }}"
 
-    - name: Set the BMC static start and end range
-      ansible.builtin.set_fact:
-        bmc_static_start_range: "{{ network_data.bmc_network.static_range | split('-') | first }}"
-        bmc_static_end_range: "{{ network_data.bmc_network.static_range | split('-') | last }}"
-
-    - name: Validate if BMC static ranges are empty
-      ansible.builtin.assert:
-        that:
-          - bmc_static_start_range | default("", true) | length > 1
-          - bmc_static_end_range | default("", true) | length > 1
-          - bmc_static_start_range.split('.') | map('int') | list | length == 4
-          - bmc_static_end_range.split('.') | map('int') | list | length == 4
-          - bmc_static_start_range | default("", true) | ansible.utils.ipv4
-          - bmc_static_end_range | default("", true) | ansible.utils.ipv4
-        success_msg: "{{ bmc_params_success_msg }}"
-        fail_msg: "{{ bmc_params_failure_msg }}"
-
     - name: Validate if bmc dynamic ranges are valid
       ansible.builtin.assert:
         that:
@@ -90,86 +96,61 @@
         success_msg: "{{ bmc_params_success_msg }}"
         fail_msg: "{{ bmc_params_failure_msg }}"
 
-    - name: Validate if bmc discover ranges are valid
-      ansible.builtin.assert:
-        that:
-          - network_data.bmc_network.discover_ranges | default("", true) | length > 1
-          - (network_data.bmc_network.discover_ranges.split('-') | first).split('.') | map('int') | list | length == 4
-          - (network_data.bmc_network.discover_ranges.split('-') | last).split('.') | map('int') | list | length == 4
-          - network_data.bmc_network.discover_ranges.split('-') | first | default("", true) | ansible.utils.ipaddr
-          - network_data.bmc_network.discover_ranges.split('-') | last | default("", true) | ansible.utils.ipaddr
-        success_msg: "{{ bmc_params_success_msg }}"
-        fail_msg: "{{ bmc_params_failure_msg }} Invalid BMC discover range."
-      when:
-        - "'discover_ranges' in network_data.bmc_network.keys()"
-        - network_data.bmc_network.discover_ranges | default("", true) | length > 1
-
-    - name: Validate start and end ranges of provision config are equal or not for static ranges
-      ansible.builtin.fail:
-        msg: "{{ bmc_static_ranges_overlap_failure_msg }}"
-      when:
-        - bmc_static_start_range | default("", true) | length > 1
-        - bmc_static_end_range | default("", true) | length > 1
-        - bmc_static_start_range | default("", true) == bmc_static_end_range | default("", true)
-
-    - name: Initialize variables
-      ansible.builtin.set_fact:
-        bmc_dynamic_status: true
-        bmc_static_status: false
-        bmc_discover_range_status: "{{ network_data.bmc_network.discover_ranges | default('', true) | length > 1 }}"
-
-    - name: Update bmc_static_status when static range is provided
-      ansible.builtin.set_fact:
-        bmc_static_status: true
-      when:
-        - bmc_static_start_range | default("", true) | length > 1
-        - bmc_static_end_range | default("", true) | length > 1
-
-    - name: Check BMC network static/dynamic range ip format
-      ansible.builtin.assert:
-        that:
-          - (bmc_static_start_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 0
-          - (bmc_dynamic_start_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 0
-          - (bmc_static_end_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 255
-          - (bmc_dynamic_end_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 255
-        fail_msg: "{{ bmc_range_ip_check_fail_msg }}"
-
-    - name: Validate bmc network static_range and netmask
+    - name: Validate dynamic conversion range when reassignment_status is true
+      when: reassignment_status
       block:
-        - name: Check network static_range format
-          ansible.builtin.command:
-            argv:
-              - "{{ python_version }}"
-              - "{{ ip_range_netmask_script_script }}"
-              - "{{ network_data.bmc_network.static_range }}"
-              - "{{ network_data.bmc_network.netmask_bits }}"
-          changed_when: false
-          register: static_range_check
-          failed_when: static_range_check.stdout == "False" or static_range_check.rc != 0
-          with_dict:
-            - "{{ network_data }}"
-      rescue:
-        - name: Rescue block
+        - name: Set the BMC conversion static start and end range
+          ansible.builtin.set_fact:
+            bmc_conversion_static_start_range: "{{ network_data.bmc_network.dynamic_conversion_static_range | split('-') | first }}"
+            bmc_conversion_static_end_range: "{{ network_data.bmc_network.dynamic_conversion_static_range | split('-') | last }}"
+
+        - name: Validate if BMC conversion static ranges are empty
+          ansible.builtin.assert:
+            that:
+              - bmc_conversion_static_start_range | default("", true) | length > 1
+              - bmc_conversion_static_end_range | default("", true) | length > 1
+              - bmc_conversion_static_start_range.split('.') | map('int') | list | length == 4
+              - bmc_conversion_static_end_range.split('.') | map('int') | list | length == 4
+              - bmc_conversion_static_start_range | default("", true) | ansible.utils.ipv4
+              - bmc_conversion_static_end_range | default("", true) | ansible.utils.ipv4
+            success_msg: "{{ bmc_params_success_msg }}"
+            fail_msg: "{{ bmc_params_failure_msg }}"
+
+        - name: Validate start and end ranges of bmc are equal or not for static ranges
           ansible.builtin.fail:
-            msg: "{{ fail_msg_bmc_static_netmask_bits }}"
+            msg: "{{ bmc_static_ranges_overlap_failure_msg }}"
+          when:
+            - bmc_conversion_static_start_range | default("", true) | length > 1
+            - bmc_conversion_static_end_range | default("", true) | length > 1
+            - bmc_conversion_static_start_range | default("", true) == bmc_conversion_static_end_range | default("", true)
 
-    - name: Validate BMC reassignment_to_static
-      ansible.builtin.assert:
-        that:
-          - network_data.bmc_network.reassignment_to_static == true or
-            network_data.bmc_network.reassignment_to_static == false
-        fail_msg: "{{ reassignment_to_static_failure_msg }}"
-      when: network_data.bmc_network.reassignment_to_static != None
+        - name: Check BMC network static/dynamic range ip format
+          ansible.builtin.assert:
+            that:
+              - (bmc_conversion_static_start_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 0
+              - (bmc_dynamic_start_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 0
+              - (bmc_conversion_static_end_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 255
+              - (bmc_dynamic_end_range | ansible.utils.ipaddr('address')).split('.')[-1] | int != 255
+            fail_msg: "{{ bmc_range_ip_check_fail_msg }}"
 
-    - name: Set default reassignment status
-      ansible.builtin.set_fact:
-        reassignment_status: false
-      when: network_data.bmc_network.reassignment_to_static == None
-
-    - name: Set reassignment status
-      ansible.builtin.set_fact:
-        reassignment_status: "{{ network_data.bmc_network.reassignment_to_static }}"
-      when: network_data.bmc_network.reassignment_to_static != None
+        - name: Validate bmc network static_range and netmask
+          block:
+            - name: Check network static_range format
+              ansible.builtin.command:
+                argv:
+                  - "{{ python_version }}"
+                  - "{{ ip_range_netmask_script_script }}"
+                  - "{{ network_data.bmc_network.dynamic_conversion_static_range }}"
+                  - "{{ network_data.bmc_network.netmask_bits }}"
+              changed_when: false
+              register: static_range_check
+              failed_when: static_range_check.stdout == "False" or static_range_check.rc != 0
+              with_dict:
+                - "{{ network_data }}"
+          rescue:
+            - name: Rescue block
+              ansible.builtin.fail:
+                msg: "{{ fail_msg_bmc_static_netmask_bits }}"
 
     - name: Check bmc network details
       block:
@@ -194,7 +175,7 @@
     - name: Set bmc_ip
       ansible.builtin.set_fact:
         bmc_nic_ip: "{{ script_output.stdout }}"
-        bmc_nic: "{{ network_data.bmc_network.nic_name }}"
+        bmc_nic: "{{ network_data.bmc_network.oim_nic_name }}"
       when:
         - script_output.rc == 0
 

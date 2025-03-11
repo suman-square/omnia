@@ -1,4 +1,4 @@
-#  Copyright 2023 Dell Inc. or its subsidiaries. All Rights Reserved.
+#  Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 
 - name: Check if omnia_vault_key exists
   ansible.builtin.stat:
-    path: "{{ role_path }}/../../../input/{{ config_vaultname }}"
+    path: "{{ input_project_dir }}/{{ config_vaultname }}"
   register: vault_key_result
 
 - name: Create ansible vault key if it does not exist
@@ -25,7 +25,7 @@
 
 - name: Save vault key
   ansible.builtin.lineinfile:
-    path: "{{ role_path }}/../../../input/{{ config_vaultname }}"
+    path: "{{ input_project_dir }}/{{ config_vaultname }}"
     line: "{{ vault_key }}"
     mode: "{{ vault_key_permission }}"
     owner: root
@@ -33,22 +33,22 @@
   when: not vault_key_result.stat.exists
 
 - name: Check if omnia config file is encrypted
-  ansible.builtin.command: cat {{ role_path }}/../../../input/{{ config_filename }}
+  ansible.builtin.command: cat {{ input_project_dir }}/{{ config_filename }}
   changed_when: false
   register: config_content
   no_log: true
 
 - name: Decrpyt omnia_config.yml
   ansible.builtin.command: >-
-    ansible-vault decrypt {{ role_path }}/../../../input/{{ config_filename }}
-    --vault-password-file {{ role_path }}/../../../input/{{ config_vaultname }}
+    ansible-vault decrypt {{ input_project_dir }}/{{ config_filename }}
+    --vault-password-file {{ input_project_dir }}/{{ config_vaultname }}
   when: "'$ANSIBLE_VAULT;' in config_content.stdout"
   changed_when: true
 
 - name: Include variable file omnia_config.yml
   block:
     - name: Include variable file omnia_config.yml
-      ansible.builtin.include_vars: "{{ role_path }}/../../../input/{{ config_filename }}"
+      ansible.builtin.include_vars: "{{ input_project_dir }}/{{ config_filename }}"
       register: include_omnia_config
       no_log: true
   rescue:
@@ -99,29 +99,9 @@
     fail_msg: "{{ restart_services_failure_msg }}"
   when: slurm_support
 
-- name: Check virtual ENV
-  ansible.builtin.set_fact:
-    venv_path: "{{ lookup('ansible.builtin.env', 'VIRTUAL_ENV') }}"
-
 - name: Validate k8s_support variable
   when: k8s_support
   block:
-    - name: Fail if kubernetes version is other than 1.26.12 or omnia161_venv is not activated for RHEL/Rocky 8.6 or 8.7
-      ansible.builtin.fail:
-        msg: "{{ kube_version_on_unsupported_os }}"
-      when:
-        - cluster_os_type in ['rhel', 'rocky']
-        - cluster_os_version in ['8.6', '8.7']
-        - (omnia161_k8s_version not in k8s_version) or ('omnia161_venv' not in venv_path)
-
-    - name: Assert supported kubernetes version
-      ansible.builtin.assert:
-        that:
-          - k8s_version | default("", false) | length > 1
-          - "('omnia161_venv' in venv_path  and '{{ omnia161_k8s_version }}' in k8s_version) or ( 'omnia17_venv' in venv_path and '{{ omnia17_k8s_version }}' in k8s_version)" # noqa: yaml[line-length]
-        success_msg: "{{ success_msg_k8s_version }}"
-        fail_msg: "{{ fail_msg_k8s_version }}"
-
     - name: Assert kubernetes cni
       ansible.builtin.assert:
         that:
@@ -210,6 +190,6 @@
 
 - name: Encrypt input config file
   ansible.builtin.command: >-
-    ansible-vault encrypt {{ role_path }}/../../../input/{{ config_filename }}
-    --vault-password-file {{ role_path }}/../../../input/{{ config_vaultname }}
+    ansible-vault encrypt {{ input_project_dir }}/{{ config_filename }}
+    --vault-password-file {{ input_project_dir }}/{{ config_vaultname }}
   changed_when: false

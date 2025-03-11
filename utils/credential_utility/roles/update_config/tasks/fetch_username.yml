@@ -1,0 +1,47 @@
+# Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+
+- name: Fetch "{{ username }}" if empty # noqa name[template]
+  when:
+    - vars[username] is defined
+    - (vars[username] | length == 0) or (type.key == "default")
+  block:
+    - name: Prompt user for Username
+      ansible.builtin.pause:
+        prompt: "Enter the [{{ type.key }}] - {{ username }}:"
+      register: username_input
+
+    - name: Validate mandatory username not empty
+      ansible.builtin.fail:
+        msg: "{{ mandatory_credentials_msg }}"
+      when:
+        - mandatory_credentials_status
+        - password_input.user_input | length == 0
+
+    - name: Update vars file with entered username
+      ansible.builtin.lineinfile:
+        path: "{{ omnia_credential_file }}"
+        regexp: '^{{ username }}:'
+        line: "{{ username }}: \"{{ username_input.user_input }}\""
+      no_log: true
+      when: username_input.user_input | length != 0
+
+  rescue:
+    - name: Invalid Username provided
+      ansible.builtin.include_tasks: encrypt_credentials_file.yml
+
+    - name: Failed to credentials with entered username
+      ansible.builtin.fail:
+        msg: "{{ username_fail_msg }}"

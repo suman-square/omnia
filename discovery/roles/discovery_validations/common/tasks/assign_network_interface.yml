@@ -22,9 +22,8 @@
   ansible.builtin.set_fact:
     bmc_details_status: true
   when:
-    - network_data.bmc_network.nic_name | default("", true) | length > 0
+    - network_data.bmc_network.oim_nic_name | default("", true) | length > 0
     - network_data.bmc_network.netmask_bits | default("", true) | length > 0
-    - network_data.bmc_network.static_range | default("", true) | length > 0
     - network_data.bmc_network.dynamic_range | default("", true) | length > 0
 
 - name: Warning - BMC network details incomplete
@@ -40,15 +39,15 @@
         network_interface_type: "lom"
       when:
         - bmc_details_status
-        - network_data.admin_network.nic_name == network_data.bmc_network.nic_name
+        - network_data.admin_network.oim_nic_name == network_data.bmc_network.oim_nic_name
 
     - name: Assign Dedicated to network_interface_type
       ansible.builtin.set_fact:
         network_interface_type: "dedicated"
       when:
         - (not bmc_details_status) or
-          (network_data.bmc_network.nic_name | default("", true) | length > 1
-          and network_data.admin_network.nic_name != network_data.bmc_network.nic_name)
+          (network_data.bmc_network.oim_nic_name | default("", true) | length > 1
+          and network_data.admin_network.oim_nic_name != network_data.bmc_network.oim_nic_name)
   rescue:
     - name: Failed to initialize network interface type
       ansible.builtin.fail:

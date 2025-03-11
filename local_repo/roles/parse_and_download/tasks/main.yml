@@ -17,13 +17,10 @@
   ansible.builtin.set_fact:
     project_input_path:"{{ hostvars['localhost']['input_project_dir'] }}"
 
-- name: Prepare package takslist
-  ansible.builtin.include_tasks: create_tasklist.yml
-
-- name : Process rpms
+- name : Process and configure local_repo_config
   ansible.builtin.include_tasks: process_rpm_repo.yml
 
-- name: Run parallel tasks for each group
+- name: Execute tasks for each group
   ansible.builtin.include_tasks: execute_parallel_tasks.yml
   loop: "{{ result.software_dict | dict2items }}"
   loop_control:
@@ -32,23 +29,27 @@
 
 - name: Clear the rpm downloaded files
   ansible.builtin.file:
-    path: "{{ repo_store_path }}/cluster/{{ cluster_os_type }}/{{ cluster_os_version }}/rpm }}"
+    path: "{{ repo_store_path }}/cluster/{{ cluster_os_type }}/{{ cluster_os_version }}/rpm"
     state: absent
   when: clean_rpms
 
 - name: Create metadata file
   ansible.builtin.include_tasks: create_metadata.yml
 
-- name: Print overall softwares status 
+- name: Print overall software status
   ansible.builtin.debug:
     msg:
       - "   Name    | Status"
       - "--------------------"
-      - "{{ overall_status_dict | dict2items | map(attribute='key') | zip(overall_status_dict | dict2items | map(attribute='value')) | map('join', '  |  ') | list }}"
+      - "{{ overall_status_dict | default({}) | dict2items | map(attribute='key') | zip(overall_status_dict | default({}) | dict2items | map(attribute='value') | map('lower')) | map('join', '  |  ') | list }}"
 
 - name: Determine final repository status
   ansible.builtin.set_fact:
-    final_status: "{{ 'SUCCESS' if 'FAILURE' not in overall_status_dict.values() and 'TIMEOUT' not in overall_status_dict.values() and 'PARTIAL' not in overall_status_dict.values() else 'FAILED' }}"
+    final_status: "{{ 'SUCCESS' if 'FAILURE' not in (overall_status_dict | default({}) | dict2items | map(attribute='value') | list) and 
+                      'TIMEOUT' not in (overall_status_dict | default({}) | dict2items | map(attribute='value') | list) and 
+                      'PARTIAL' not in (overall_status_dict | default({}) | dict2items | map(attribute='value') | list) 
+                      else 'FAILED' }}"
+
 
 - name: Local repository status
   ansible.builtin.debug:

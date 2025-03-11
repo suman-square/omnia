@@ -35,13 +35,14 @@
   ansible.builtin.debug:
     msg: "Host: {{ item }}, Cmdline Value: {{ collected_cmdline_values[item] }}"
   loop: "{{ collected_cmdline_values.keys() }}"
-  when:  collected_cmdline_values | length > 0
+  when: collected_cmdline_values | length > 0
 
 - name: Kernel parameters update
   when: collected_cmdline_values | length > 0
   block:
     - name: Servicetag Host mapping and run chdef command
-      ansible.builtin.command: "{{ python_version }} {{ servicetag_node_mapping_script }} {{ file_path_db }} {{ item }} {{ collected_cmdline_values[item] | quote }}"
+      ansible.builtin.command: |
+        "{{ python_version }} {{ servicetag_node_mapping_script }} {{ file_path_db }} {{ item }} {{ collected_cmdline_values[item] | quote }}"
       register: chdef_result
       changed_when: true
       loop: "{{ collected_cmdline_values.keys() }}"

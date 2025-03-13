@@ -1,4 +1,4 @@
-#  Copyright 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+#  Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
   ansible.builtin.import_playbook: ../utils/create_container_group.yml
   vars:
     omnia_kubespray_group: true
+    omnia_provision_group: true
+  tags: always
 
 - name: Warning and User confirmation for removing cluster
   hosts: localhost
@@ -27,8 +29,14 @@
   gather_facts: false
   roles:
     - { role: remove_cluster/user_confirmation } # noqa: role-name[path]
-    - { role: servicetag_host_mapping }
     - { role: common }
+  tags: always
+
+- name: Host Mapping
+  hosts: omnia_provision
+  connection: ssh
+  roles:
+    - servicetag_host_mapping
   tags: always
 
 - name: Proceeding to remove slurm cluster
@@ -61,7 +69,7 @@
             src: "{{ playbook_dir }}/playbooks/reset_k8s_cluster.yml"
             dest: "{{ k8s_nfs_share }}/reset_k8s_cluster.yml"
 
-        - name: Ensure /logs directory exists
+        - name: Ensure log/kubespray directory exists
           ansible.builtin.file:
             path: "{{ k8s_log_dir }}"
             state: directory

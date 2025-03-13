@@ -45,6 +45,7 @@ oim_ha:
         - {SERVICE_TAG: "", HOSTNAME: "", ADMIN_MAC: "", ADMIN_IP: "", BMC_IP: ""}
         - {SERVICE_TAG: "", HOSTNAME: "", ADMIN_MAC: "", ADMIN_IP: "", BMC_IP: ""}
 
+
 # ***********************************************************************
 # High Availability (HA) Configuration for Service Nodes
 # - enable_service_ha: <Mandatory> Indicates whether to enable HA for service nodes. Set to 'true' to enable, 'false' to disable.
@@ -92,6 +93,6 @@ slurm_head_node_ha:
 # ***********************************************************************
 
 k8s_head_node_ha: 
-    enable_k8s_ha: false
+  - enable_k8s_ha: false
     virtual_ip_address: ""
     active_node_service_tags: [] # List of service tags, separated by commas. e.g. ["ABC","DEF"]

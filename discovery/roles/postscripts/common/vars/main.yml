@@ -52,4 +52,4 @@ poll_time: 15
 
 # Usage: configure_service_node.yml
 servive_node_postscripts_path:
-  - { src: "{{ role_path }}/files/omnia_service_node", dest: "/install/postscripts/omnia_service_node", mode: "755" }
+  - { src: "{{ role_path }}/templates/omnia_service_node.j2", dest: "/install/postscripts/omnia_service_node", mode: "755" }

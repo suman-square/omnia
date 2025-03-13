@@ -19,6 +19,7 @@ provision_validation_vars:
   - "{{ role_path }}/../mtms/vars/main.yml"
   - "{{ role_path }}/../switch_based/vars/main.yml"
 provision_shared_library_path: /opt/omnia/shared_libraries/provision
+ansible_tag_fail_msg: "Please run the playbook with the tag 'first_layer' only. Other tags are not allowed."
 
 # Usage: validate_provision_container.yml
 xcatd_service: "xcatd.service"
@@ -52,6 +53,7 @@ provision_config_cred_syntax_fail_msg: "Failed. Syntax errors present in provisi
 # Usage: fetch_composable_roles_config.yml
 roles_config_path: "{{ hostvars['localhost']['input_project_dir'] }}/roles_config.yml"
 roles_config_syntax_fail_msg: "Failed. Syntax errors present in role_config.yml. Fix errors and re-run playbook again."
+omnia_metadata_file: "/opt/omnia/.data/oim_metadata.yml"
 
 # Usage: include_local_repo_config.yml
 local_repo_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/local_repo_config.yml"

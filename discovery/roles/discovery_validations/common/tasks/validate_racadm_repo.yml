@@ -13,19 +13,19 @@
 #  limitations under the License.
 ---
 
-# Usage: main.yml
-discovery_mech_vars_common:
-  - "{{ role_path }}/../oim/vars/main.yml"
-xcat_path: /opt/xcat/bin
+- name: Set default racadm_input_status and racadm_input_status
+  ansible.builtin.set_fact:
+    racadm_input_status: false
+    racadm_config_status: false
 
-# Usage: update_db_mapping.yml
-db_path: "{{ provision_shared_library_path }}/db_operations"
+- name: Check if racadm_input_status is true
+  ansible.builtin.set_fact:
+    racadm_input_status: "{{ user_config.softwares | selectattr('name', 'equalto', 'racadm') | list | length > 0 }}"
 
-# Usage: node_object_creation_mapping.yml
-mapping_node_group: "mapping"
-temp_pxe_file_path: "/opt/omnia/provision/temp_pxe_file.csv"
-file_mode: "0644"
-
-# Usage: check_nodes_mapping.yml
-mapping_nodes_warning_msg: "[WARNING] Nodes provided in mapping file were already provisioned by omnia using other discovery mechanism."
-warning_wait_time: 10
+- name: Set racadm_config_status
+  when: racadm_input_status
+  block:
+    - name: Check racadm_directory exists or not
+      ansible.builtin.stat:
+        path: "{{ racadm_directory }}"
+      register: check_racadm_dir

@@ -7,6 +7,7 @@
         {"name": "amdgpu", "version": "6.3.1"},
         {"name": "cuda", "version": "12.8.0"},
         {"name": "ofed", "version": "24.10-1.1.4.0"},
+        {"name": "racadm" },
         {"name": "service_node" },
         {"name": "openldap"},
         {"name": "nfs"},

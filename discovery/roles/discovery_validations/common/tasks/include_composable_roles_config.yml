@@ -13,6 +13,11 @@
 #  limitations under the License.
 ---
 
+- name: Include metadata vars
+  ansible.builtin.include_vars: "{{ omnia_metadata_file }}"
+  register: include_metadata
+  no_log: true
+
 - name: Include roles_config.yml
   block:
     - name: Include roles_config.yml

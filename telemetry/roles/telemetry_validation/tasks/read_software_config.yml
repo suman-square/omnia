@@ -44,14 +44,13 @@
 
 - name: Decode content and check if it contains service_node,success
   ansible.builtin.set_fact:
-    sw_log_lines: "{{ sw_log_content.content | b64decode | splitlines }}"
+    sw_log_lines: "{{ sw_log_content.content | b64decode | split('\n') }}"
 
 - name: Set service_node_downloaded true if line is present
   ansible.builtin.set_fact:
     service_node_downloaded: true
   when:
-    -"'service_node' in sw_log_lines"
-    -"'service_node,success' in sw_log_lines"
+    - "'service_node,success' in sw_log_lines"
 
 - name: Fail if service_node,success not found
   ansible.builtin.fail:
@@ -88,7 +87,7 @@
 
 - name: Extract python version from python package name
   ansible.builtin.set_fact:
-    python_version: "{{ python_package_name | regex_search('([0-9]+\\.[0-9]+)') }}"
+    python_version: "{{ python_package_name }}"
 
 - name: Include local_repo_access.yml
   ansible.builtin.include_vars: "{{ local_repo_access_path }}"

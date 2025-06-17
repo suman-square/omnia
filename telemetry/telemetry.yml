@@ -167,17 +167,40 @@
     node_host: "{{ hostvars[inventory_hostname]['service_tag'] if inventory_hostname != 'localhost' else 'oim' }}"
     telemetry_report: |
           ---- Telemetry Report Overview ({{ node_host }}) ----
-          IP with Telemetry not supported: {{ failed_idrac_count }}
-          IPs with Telemetry Initiated: {{ telemetry_idrac_count }}
 
-          {% if failed_idrac_count > 0 %}
+          IP with Telemetry not supported: {{ failed_idrac_count | int + invalid_idrac_count | int }}
+          IPs with Telemetry Initiated: {{ telemetry_idrac_count | int }}
+
+          {% if (failed_idrac_count | int + invalid_idrac_count | int) > 0 %}
           Potential reasons for telemetry not being initiated include Redfish connectivity problems, timeout issues,
           iDRAC9 datacenter license constraints, or firmware-related problems.
-          IPs List (Telemetry not supported):
+          {% endif %}
+          {% if idrac_redfish_disabled | length > 0 %}
+          IPs with Redfish disabled:
+          {% for item in idrac_redfish_disabled %}
+            - {{ item }}
+          {% endfor %}
+          {% endif %}
+          {% if idrac_invalid_creds | length > 0 %}
+          IPs with invalid credentials:
+          {% for item in idrac_invalid_creds %}
+            - {{ item }}
+          {% endfor %}
+          {% endif %}
+          {% if idrac_unreachable | length > 0 %}
+          IPs with unreachable BMC:
+          {% for item in idrac_unreachable %}
+            - {{ item }}
+          {% endfor %}
+          {% endif %}
+          {% if failed_idrac | length > 0 %}
+          Telemetry not supported because of iDrac9 Datacenter license constraints or firmware issues.
+          IPs List:
           {% for item in failed_idrac %}
             - {{ item }}
           {% endfor %}
           {% endif %}
+
   tasks:
     - name: Telemetry Report Overview
       ansible.builtin.debug:

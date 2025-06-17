@@ -14,7 +14,7 @@
 ---
 
 - name: Reload Prometheus configuration # noqa command-instead-of-module
-  ansible.builtin.command: curl -X POST "{{ prometheus_reload.url }}"
+  ansible.builtin.command: curl -sS -X POST "{{ prometheus_reload.url }}"
   changed_when: false
   when:
     - idrac_telemetry_support

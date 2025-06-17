@@ -15,8 +15,8 @@
 
 # Usage: pcs_deployment.yml
 omnia_nfs_share: "{{ oim_shared_path }}/omnia"
-telemetry_data_dir: "{{ omnia_nfs_share }}/service_nodes/{{ service_tag }}/telemetry"
-telemetry_log_dir: "{{ omnia_nfs_share }}/service_nodes/{{ service_tag }}/log/telemetry"
+telemetry_data_dir: "{{ omnia_nfs_share }}/service_nodes/{{ active_service_tag }}/telemetry"
+telemetry_log_dir: "{{ omnia_nfs_share }}/service_nodes/{{ active_service_tag }}/log/telemetry"
 oim_telemetry_dir_path: "{{ omnia_nfs_share }}/telemetry"
 oim_idrac_telemetry_dir: "{{ oim_telemetry_dir_path }}/idrac_telemetry"
 pcs_group: "omnia"

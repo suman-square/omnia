@@ -36,21 +36,26 @@
     - host_inventory.invalid_parent_tags is defined
     - host_inventory.invalid_parent_tags | length > 0
 
-- name: Add service node admin details to inventory
-  ansible.builtin.add_host:
-    name: "{{ item.value }}"
-    groups: sn_admin
-    service_tag: "{{ item.key }}"
-  loop: "{{ host_inventory.sn_admin_ip | dict2items }}"
+- name: Add service node hosts to inventory
   when: federated_idrac_telemetry_collection
+  block:
+    - name: Add service node admin details to inventory
+      ansible.builtin.add_host:
+        name: "{{ item.value.admin_ip }}"
+        groups: sn_admin
+        service_tag: "{{ item.key }}"
+        active_service_tag: "{{ item.value.active_service_tag }}"
+      loop: "{{ host_inventory.sn_node_info | dict2items }}"
+      when: item.value.admin_ip is defined
 
-- name: Add active service nodes to inventory
-  ansible.builtin.add_host:
-    name: "{{ item.value }}"
-    groups: sn_active
-    service_tag: "{{ item.key }}"
-  loop: "{{ host_inventory.sn_active_ip | dict2items }}"
-  when: federated_idrac_telemetry_collection
+    - name: Add active service nodes to inventory
+      ansible.builtin.add_host:
+        name: "{{ item.value.active_ip }}"
+        groups: sn_active
+        service_tag: "{{ item.key }}"
+        active_service_tag: "{{ item.value.active_service_tag }}"
+      loop: "{{ host_inventory.sn_node_info | dict2items }}"
+      when: item.key == item.value.active_service_tag
 
 - name: Add passive oim hosts to inventory
   ansible.builtin.add_host:
